@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoTrack: The Smart Sustainability Score Card</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+
+        <h1>🌱 EcoTrack: The Smart Sustainability Score Card</h1>
+        <p>Track, measure, and improve your environmental impact</p>
+    </header>
+
+    <main>
+        <div class="hero-section">
+            <h2>Take Action for Our Planet</h2>
+            <p>Discover your environmental impact and learn how to make a difference</p>
+            <div style="text-align: center; margin-top: 2rem;">
+                <a href="dashboard.html" class="btn" style="margin-right: 1rem;">Dashboard</a>
+                <a href="login.html" class="btn" style="margin-right: 1rem;">Login / Register</a>
+                <a href="admin.html" class="btn">Admin Panel</a>
+            </div>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="icon">📊</div>
+                <h3>Carbon Emission Quiz</h3>
+                <p>Take our comprehensive 40-question quiz to assess your carbon footprint</p>
+                <a href="quiz.html" class="btn">Start Quiz</a>
+            </div>
+
+            <div class="feature-card">
+                <div class="icon">🌍</div>
+                <h3>Global Impact Calculator</h3>
+                <p>See what would happen if everyone lived like you</p>
+                <a href="impact.html" class="btn">Calculate Impact</a>
+            </div>
+
+            <div class="feature-card">
+                <div class="icon">♻️</div>
+                <h3>Recycling Resources</h3>
+                <p>Find verified websites and locations for recycling various materials</p>
+                <a href="recycle.html" class="btn">Find Resources</a>
+            </div>
+
+            <div class="feature-card">
+                <div class="icon">📈</div>
+                <h3>3D Emission Visualization</h3>
+                <p>Interactive 3D charts showing emissions by sector</p>
+                <a href="visualization.html" class="btn">View Visualization</a>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 EcoTrack - Your Smart Sustainability Score Card</p>
+    </footer>
+
+    <script>
+        // Update navigation based on login status
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            
+            if (token && user.username) {
+                // User is logged in - show welcome message
+                const header = document.querySelector('header p');
+                header.textContent = `Welcome back, ${user.username}! Track your environmental impact`;
+            }
+        });
+    </script>
+</body>
+</html>

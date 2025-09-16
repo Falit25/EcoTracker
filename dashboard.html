@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - EcoTrack</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+
+        <div class="profile-dropdown" style="position: absolute; top: 1rem; right: 1rem;">
+            <div class="profile-trigger" onclick="toggleProfileDropdown()" style="background: rgba(255,255,255,0.2); padding: 0.8rem; border-radius: 50%; cursor: pointer; backdrop-filter: blur(10px); border: 2px solid rgba(255,255,255,0.3); width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                <span style="color: white; font-size: 1.2rem;" id="userInitial">U</span>
+            </div>
+            <div id="profileDropdownMenu" class="profile-menu" style="display: none; position: absolute; top: 70px; right: 0; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 1rem; width: 250px; box-shadow: 0 10px 30px var(--shadow); z-index: 1000;">
+                <div style="text-align: center; margin-bottom: 1rem;">
+                    <div style="font-size: 1.2rem; font-weight: bold; color: #28a745;" id="dropdownPoints">0 Points</div>
+                </div>
+                <hr style="border-color: var(--border-color); margin-bottom: 1rem;">
+
+                <button onclick="logout()" class="btn" style="width: 100%; background: #dc3545;">🚪 Logout</button>
+            </div>
+        </div>
+        <h1>🌱 EcoTrack Dashboard</h1>
+        <p>Welcome back, <span id="username">User</span>!</p>
+    </header>
+
+    <main>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="icon">📊</div>
+                <h3>Quiz</h3>
+                <p>Earn 10 points per week. Complete carbon footprint assessment.</p>
+                <a href="quiz.html" class="btn">Start Quiz</a>
+            </div>
+
+            <div class="feature-card">
+                <div class="icon">🌍</div>
+                <h3>Global Impact</h3>
+                <p>See what would happen if everyone lived like you</p>
+                <a href="impact.html" class="btn">Calculate Impact</a>
+            </div>
+
+            <div class="feature-card">
+                <div class="icon">♻️</div>
+                <h3>Recycle Websites</h3>
+                <p>Find verified recycling resources and locations</p>
+                <a href="recycle.html" class="btn">Find Resources</a>
+            </div>
+
+            <div class="feature-card">
+                <div class="icon">📈</div>
+                <h3>3D Emission Visualization</h3>
+                <p>Interactive charts showing emissions by sector</p>
+                <a href="visualization.html" class="btn">View Charts</a>
+            </div>
+
+            <div class="feature-card">
+                <div class="icon">📸</div>
+                <h3>Earn Points</h3>
+                <p>Upload photos/videos of eco-activities for admin approval</p>
+                <a href="submit.html" class="btn">Upload Evidence</a>
+            </div>
+
+            <div class="feature-card">
+                <div class="icon">🎁</div>
+                <h3>Rewards Store</h3>
+                <p>Redeem your points for eco-friendly rewards and badges</p>
+                <a href="rewards.html" class="btn">Browse Rewards</a>
+            </div>
+
+            <div class="feature-card">
+                <div class="icon">🏆</div>
+                <h3>Recent Rewards</h3>
+                <div id="recentRewards">Loading...</div>
+            </div>
+
+            <div class="feature-card">
+                <div class="icon">👤</div>
+                <h3>Your Profile</h3>
+                <div id="userStats">
+                    <p>Points: <span id="userPoints">0</span></p>
+                    <p>Level: <span id="userLevel">1</span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="viz-container">
+            <h2>🏅 Leaderboard</h2>
+            <div id="leaderboard">Loading...</div>
+        </div>
+    </main>
+
+    <script>
+        let user = null;
+
+        async function loadUserData() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Please login first');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/profile', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    user = await response.json();
+                    document.getElementById('username').textContent = user.username || 'User';
+                    document.getElementById('userPoints').textContent = user.points || 0;
+                    document.getElementById('userLevel').textContent = user.level || 1;
+                    document.getElementById('dropdownPoints').textContent = (user.points || 0) + ' Points';
+                    document.getElementById('userInitial').textContent = (user.username || 'U').charAt(0).toUpperCase();
+                } else if (response.status === 401 || response.status === 403) {
+                    // Only logout on authentication errors
+                    alert('Session expired. Please login again.');
+                    logout();
+                } else {
+                    // Server error - don't logout, use cached data
+                    const cachedUser = localStorage.getItem('user');
+                    if (cachedUser) {
+                        user = JSON.parse(cachedUser);
+                        document.getElementById('username').textContent = user.username || 'User';
+                        document.getElementById('userPoints').textContent = user.points || 0;
+                        document.getElementById('userLevel').textContent = user.level || 1;
+                        document.getElementById('dropdownPoints').textContent = (user.points || 0) + ' Points';
+                        document.getElementById('userInitial').textContent = (user.username || 'U').charAt(0).toUpperCase();
+                    }
+                    console.log('Server error, using cached data');
+                }
+            } catch (error) {
+                // Network error - use cached data, don't logout
+                const cachedUser = localStorage.getItem('user');
+                if (cachedUser) {
+                    user = JSON.parse(cachedUser);
+                    document.getElementById('username').textContent = user.username || 'User';
+                    document.getElementById('userPoints').textContent = user.points || 0;
+                    document.getElementById('userLevel').textContent = user.level || 1;
+                    document.getElementById('dropdownPoints').textContent = (user.points || 0) + ' Points';
+                    document.getElementById('userInitial').textContent = (user.username || 'U').charAt(0).toUpperCase();
+                }
+                console.log('Network error, using cached data');
+            }
+        }
+
+        async function loadRewards() {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch('/api/rewards', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const rewards = await response.json();
+                    const container = document.getElementById('recentRewards');
+                    
+                    if (rewards.length === 0) {
+                        container.innerHTML = '<p>No rewards yet. Complete tasks to earn points!</p>';
+                    } else {
+                        container.innerHTML = rewards.slice(0, 3).map(reward => 
+                            `<div style="margin-bottom: 0.5rem; padding: 0.5rem; background: var(--option-bg); border-radius: 5px;">
+                                <strong>+${reward.points}</strong> - ${reward.description}
+                            </div>`
+                        ).join('');
+                    }
+                }
+            } catch (error) {
+                document.getElementById('recentRewards').innerHTML = '<p>Failed to load rewards</p>';
+            }
+        }
+
+        async function loadLeaderboard() {
+            try {
+                const response = await fetch('/api/leaderboard');
+                if (response.ok) {
+                    const users = await response.json();
+                    const container = document.getElementById('leaderboard');
+                    
+                    container.innerHTML = users.map((user, index) => 
+                        `<div style="display: flex; justify-content: space-between; padding: 0.5rem; margin-bottom: 0.5rem; background: var(--option-bg); border-radius: 5px;">
+                            <span>${index + 1}. ${user.username}</span>
+                            <span>Level ${user.level} - ${user.points} pts</span>
+                        </div>`
+                    ).join('');
+                }
+            } catch (error) {
+                document.getElementById('leaderboard').innerHTML = '<p>Failed to load leaderboard</p>';
+            }
+        }
+
+        function toggleProfileDropdown() {
+            const menu = document.getElementById('profileDropdownMenu');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.profile-dropdown')) {
+                document.getElementById('profileDropdownMenu').style.display = 'none';
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+
+
+            loadUserData();
+            loadRewards();
+            loadLeaderboard();
+        });
+    </script>
+</body>
+</html>

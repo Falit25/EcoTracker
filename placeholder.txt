@@ -1,0 +1,11 @@
+This folder contains placeholder images for the Smart Sustainability Hub website.
+
+Recommended images to add:
+- logo.png (website logo)
+- hero-bg.jpg (background image for hero section)
+- quiz-icon.png (quiz feature icon)
+- calculator-icon.png (calculator feature icon)
+- recycle-icon.png (recycling feature icon)
+- visualization-icon.png (3D chart feature icon)
+
+The website currently uses emoji icons and CSS gradients for visual appeal, but actual images can be added here to enhance the design further.

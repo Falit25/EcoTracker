@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Evidence - EcoTrack</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <h1>📸 Submit Evidence</h1>
+        <p>Upload photos/videos of your eco-friendly activities</p>
+        <a href="dashboard.html" class="btn" style="position: absolute; top: 1rem; left: 1rem;">← Back to Dashboard</a>
+    </header>
+
+    <main>
+        <div class="calculator-container">
+            <h2>Upload Your Eco-Activity</h2>
+            <form id="submitForm" enctype="multipart/form-data">
+                <div class="input-group">
+                    <label for="file">Choose File (Image/Video):</label>
+                    <input type="file" id="file" accept="image/*,video/*" required>
+                </div>
+                
+                <div class="input-group">
+                    <label for="description">Description:</label>
+                    <textarea id="description" rows="4" placeholder="Describe your eco-friendly activity..." required></textarea>
+                </div>
+                
+                <button type="submit" class="btn">Submit for Review</button>
+            </form>
+            
+            <div id="message" class="message" style="display: none;"></div>
+        </div>
+
+        <div class="viz-container">
+            <h2>📋 Submission Guidelines</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="icon">♻️</div>
+                    <h3>Recycling Activities</h3>
+                    <p>Photos of items being recycled, visiting recycling centers</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">🌱</div>
+                    <h3>Green Initiatives</h3>
+                    <p>Planting trees, gardening, composting activities</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">🚲</div>
+                    <h3>Sustainable Transport</h3>
+                    <p>Using bikes, public transport, walking instead of cars</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">💡</div>
+                    <h3>Energy Saving</h3>
+                    <p>LED bulbs, solar panels, energy-efficient appliances</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.getElementById('submitForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Please login first');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', document.getElementById('file').files[0]);
+            formData.append('description', document.getElementById('description').value);
+
+            try {
+                const response = await fetch('/api/submit', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    showMessage('Submission successful! Awaiting admin approval.', 'success');
+                    document.getElementById('submitForm').reset();
+                } else {
+                    showMessage(data.error || 'Submission failed', 'error');
+                }
+            } catch (error) {
+                showMessage('Network error. Please try again.', 'error');
+            }
+        });
+
+        function showMessage(text, type) {
+            const message = document.getElementById('message');
+            message.textContent = text;
+            message.className = `message ${type}`;
+            message.style.display = 'block';
+            setTimeout(() => message.style.display = 'none', 5000);
+        }
+    </script>
+
+    <style>
+        .message {
+            padding: 1rem;
+            border-radius: 5px;
+            margin-top: 1rem;
+            text-align: center;
+        }
+        .message.error {
+            background: #fee;
+            color: #c33;
+            border: 1px solid #fcc;
+        }
+        .message.success {
+            background: #efe;
+            color: #363;
+            border: 1px solid #cfc;
+        }
+        textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            background: var(--input-bg);
+            color: var(--text-color);
+            font-family: inherit;
+            resize: vertical;
+        }
+    </style>
+</body>
+</html>

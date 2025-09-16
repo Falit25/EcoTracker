@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Emission Visualization - EcoTrack</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <header>
+        <button class="theme-toggle" onclick="toggleTheme()" style="position: absolute; top: 1rem; left: 1rem;">📈 Dark Mode</button>
+        <h1>📈 EcoTrack 3D Analytics</h1>
+        <p>Interactive 3D charts showing emissions by sector</p>
+        <a href="index.html" class="btn" style="position: absolute; top: 3.5rem; left: 1rem;">← Back to Home</a>
+    </header>
+
+    <main>
+        <div class="viz-container">
+            <h2>Global Carbon Emissions by Sector</h2>
+            <div class="controls">
+                <button class="control-btn" onclick="showGlobalData()">Global Data</button>
+                <button class="control-btn" onclick="showPersonalData()">Personal Impact</button>
+                <button class="control-btn" onclick="showComparison()">Country Comparison</button>
+                <button class="control-btn" onclick="showTrends()">Historical Trends</button>
+            </div>
+            <div id="chart1" style="width:100%;height:500px;"></div>
+        </div>
+
+        <div class="viz-container">
+            <h2>Emission Sources Breakdown</h2>
+            <div class="controls">
+                <button class="control-btn" onclick="showPieChart()">Pie Chart</button>
+                <button class="control-btn" onclick="showBarChart()">Bar Chart</button>
+                <button class="control-btn" onclick="showSunburst()">Sunburst</button>
+            </div>
+            <div id="chart2" style="width:100%;height:500px;"></div>
+        </div>
+
+        <div class="viz-container">
+            <h2>Regional Emissions Map</h2>
+            <div id="chart3" style="width:100%;height:500px;"></div>
+        </div>
+
+        <div class="info-panel" style="margin-top: 2rem; padding: 2rem; background: var(--option-bg); border-radius: 10px; border: 1px solid var(--border-color);">
+            <h3>📊 Understanding the Data</h3>
+            <div class="data-insights">
+                <div class="insight-card">
+                    <h4>🏭 Energy Production (25%)</h4>
+                    <p>Electricity and heat production from fossil fuels</p>
+                </div>
+                <div class="insight-card">
+                    <h4>🌾 Agriculture (24%)</h4>
+                    <p>Livestock, rice cultivation, and land use changes</p>
+                </div>
+                <div class="insight-card">
+                    <h4>🏢 Industry (21%)</h4>
+                    <p>Manufacturing, cement, steel, and chemical production</p>
+                </div>
+                <div class="insight-card">
+                    <h4>🚗 Transportation (14%)</h4>
+                    <p>Road, aviation, shipping, and rail transport</p>
+                </div>
+                <div class="insight-card">
+                    <h4>🏠 Buildings (6%)</h4>
+                    <p>Residential and commercial energy use</p>
+                </div>
+                <div class="insight-card">
+                    <h4>🔥 Other Energy (10%)</h4>
+                    <p>Fugitive emissions, flaring, and other sources</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/visualization.js"></script>
+    <script>
+        function toggleTheme() {
+            const body = document.body;
+            const button = document.querySelector('.theme-toggle');
+            
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
+                button.textContent = '🌙 Dark Mode';
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                button.textContent = '☀️ Light Mode';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme');
+            const button = document.querySelector('.theme-toggle');
+            
+            if (savedTheme === 'dark') {
+                document.body.setAttribute('data-theme', 'dark');
+                button.textContent = '☀️ Light Mode';
+            }
+            
+            // Check if user is logged in
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator - Smart Sustainability Hub</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1>📱 QR Code Generator</h1>
+        <p>Generate QR codes for your Smart Sustainability Hub</p>
+        <a href="index.html" class="btn">← Back to Home</a>
+    </header>
+
+    <main>
+        <div class="quiz-container">
+            <h2>Generate QR Code for Website</h2>
+            
+            <div class="input-group">
+                <label for="websiteUrl">Website URL:</label>
+                <input type="text" id="websiteUrl" placeholder="Enter your website URL or file path" value="file:///e:/VS%20CODE/Smart%20Sustainability%20Hackathon%20Website%20Folder/index.html">
+            </div>
+            
+            <button onclick="generateQR()" class="btn">Generate QR Code</button>
+            
+            <div id="qrResult" style="display: none;">
+                <div class="result-card">
+                    <h3>Your QR Code</h3>
+                    <div id="qrcode" style="text-align: center; margin: 2rem 0;"></div>
+                    <p>Scan this QR code to access Smart Sustainability Hub</p>
+                    <button onclick="downloadQR()" class="btn">Download QR Code</button>
+                </div>
+            </div>
+
+            <div class="qr-options">
+                <h3>Quick QR Codes</h3>
+                <div class="qr-grid">
+                    <button onclick="generateQuickQR('index')" class="btn">Home Page</button>
+                    <button onclick="generateQuickQR('quiz')" class="btn">Carbon Quiz</button>
+                    <button onclick="generateQuickQR('impact')" class="btn">Impact Calculator</button>
+                    <button onclick="generateQuickQR('recycle')" class="btn">Recycling Resources</button>
+                    <button onclick="generateQuickQR('visualization')" class="btn">3D Visualization</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function generateQR() {
+            const url = document.getElementById('websiteUrl').value;
+            if (!url) {
+                alert('Please enter a URL');
+                return;
+            }
+            
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = '';
+            
+            QRCode.toCanvas(qrContainer, url, {
+                width: 300,
+                height: 300,
+                color: {
+                    dark: '#2c3e50',
+                    light: '#ffffff'
+                },
+                margin: 2
+            }, function (error) {
+                if (error) {
+                    console.error(error);
+                    alert('Error generating QR code');
+                } else {
+                    document.getElementById('qrResult').style.display = 'block';
+                }
+            });
+        }
+        
+        function generateQuickQR(page) {
+            const basePath = 'file:///e:/VS%20CODE/Smart%20Sustainability%20Hackathon%20Website%20Folder/';
+            const urls = {
+                'index': basePath + 'index.html',
+                'quiz': basePath + 'quiz.html',
+                'impact': basePath + 'impact.html',
+                'recycle': basePath + 'recycle.html',
+                'visualization': basePath + 'visualization.html'
+            };
+            
+            document.getElementById('websiteUrl').value = urls[page];
+            generateQR();
+        }
+        
+        function downloadQR() {
+            const canvas = document.querySelector('#qrcode canvas');
+            if (canvas) {
+                const link = document.createElement('a');
+                link.download = 'smart-sustainability-hub-qr.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            }
+        }
+        
+        // Auto-generate QR for home page on load
+        window.onload = function() {
+            generateQR();
+        };
+    </script>
+
+    <style>
+        .qr-options {
+            margin-top: 3rem;
+            padding: 2rem;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .qr-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .qr-grid .btn {
+            margin: 0;
+        }
+        
+        #qrcode canvas {
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+    </style>
+</body>
+</html>

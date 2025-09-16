@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Impact Calculator - EcoTrack</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <button class="theme-toggle" onclick="toggleTheme()" style="position: absolute; top: 1rem; left: 1rem;">🌙 Dark Mode</button>
+        <h1>🌍 EcoTrack Global Impact</h1>
+        <p>See what would happen if everyone lived like you</p>
+        <a href="index.html" class="btn" style="position: absolute; top: 3.5rem; left: 1rem;">← Back to Home</a>
+    </header>
+
+    <main>
+        <div class="calculator-container">
+            <h2>Calculate Global Environmental Impact</h2>
+            
+            <div class="input-group">
+                <label for="carbonFootprint">Your Carbon Footprint (tons CO₂/year):</label>
+                <input type="number" id="carbonFootprint" step="0.1" min="0" max="100" placeholder="Enter your carbon footprint">
+                <small>Don't know? <a href="quiz.html">Take our quiz</a> to find out!</small>
+            </div>
+            
+            <button onclick="calculateGlobalImpact()" class="btn">Calculate Global Impact</button>
+            
+            <div id="results" style="display: none;">
+                <div class="result-card">
+                    <h3>If all 8 billion people lived like you:</h3>
+                    <div id="globalResults"></div>
+                    <div id="comparison"></div>
+                    <div id="earthsNeeded"></div>
+                    
+                    <div class="future-scenario">
+                        <h4>🔮 Your Future World Scenario:</h4>
+                        <div id="scenarioImage"></div>
+                        <div id="scenarioDescription"></div>
+                    </div>
+                    
+                    <div class="impact-visualization">
+                        <canvas id="impactChart" width="400" height="200"></canvas>
+                    </div>
+                    
+                    <div class="action-items">
+                        <h4>What You Can Do:</h4>
+                        <div id="actionItems"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/impact.js"></script>
+    <script>
+        function toggleTheme() {
+            const body = document.body;
+            const button = document.querySelector('.theme-toggle');
+            
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
+                button.textContent = '🌙 Dark Mode';
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                button.textContent = '☀️ Light Mode';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme');
+            const button = document.querySelector('.theme-toggle');
+            
+            if (savedTheme === 'dark') {
+                document.body.setAttribute('data-theme', 'dark');
+                button.textContent = '☀️ Light Mode';
+            }
+            
+            // Check if user is logged in
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html';
+            }
+        });
+    </script>
+</body>
+</html>

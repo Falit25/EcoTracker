@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rewards - EcoTrack</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <div class="profile-dropdown" style="position: absolute; top: 1rem; right: 1rem;">
+            <div class="profile-trigger" onclick="toggleProfileDropdown()" style="background: rgba(255,255,255,0.2); padding: 0.8rem; border-radius: 50%; cursor: pointer; backdrop-filter: blur(10px); border: 2px solid rgba(255,255,255,0.3); width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                <span style="color: white; font-size: 1.2rem;" id="userInitial">U</span>
+            </div>
+            <div id="profileDropdownMenu" class="profile-menu" style="display: none; position: absolute; top: 70px; right: 0; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 1rem; width: 250px; box-shadow: 0 10px 30px var(--shadow); z-index: 1000;">
+                <div style="text-align: center; margin-bottom: 1rem;">
+                    <div style="font-size: 1.2rem; font-weight: bold; color: #28a745;" id="dropdownPoints">0 Points</div>
+                </div>
+                <hr style="border-color: var(--border-color); margin-bottom: 1rem;">
+                <button onclick="logout()" class="btn" style="width: 100%; background: #dc3545;">🚪 Logout</button>
+            </div>
+        </div>
+        <h1>🏆 EcoTrack Rewards</h1>
+        <p>Redeem your points for amazing eco-friendly rewards!</p>
+        <a href="dashboard.html" class="btn" style="position: absolute; top: 3.5rem; left: 1rem;">← Back to Dashboard</a>
+    </header>
+
+    <main>
+        <div class="viz-container">
+            <div class="features-grid" style="grid-template-columns: 1fr 1fr;">
+                <div class="feature-card">
+                    <div class="icon">💰</div>
+                    <h3>Your Points</h3>
+                    <div class="big-number" id="userPoints">0</div>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">📦</div>
+                    <h3>Claimed Rewards</h3>
+                    <div class="big-number" id="claimedCount">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="reward-tabs">
+            <button class="tab-btn active" onclick="showRewardTab('catalog')">🛍️ Rewards Catalog</button>
+            <button class="tab-btn" onclick="showRewardTab('claims')">📋 My Claims</button>
+        </div>
+
+        <div id="catalogTab" class="viz-container">
+            <h2>🎁 Available Rewards</h2>
+            <div id="rewardsCatalog">Loading...</div>
+        </div>
+
+        <div id="claimsTab" class="viz-container" style="display: none;">
+            <h2>📦 My Reward Claims</h2>
+            <div id="myClaims">Loading...</div>
+        </div>
+    </main>
+
+    <!-- Claim Modal -->
+    <div id="claimModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeClaimModal()">&times;</span>
+            <h2>Claim Reward</h2>
+            <div id="rewardDetails"></div>
+            <form onsubmit="submitClaim(event)">
+                <div id="shippingForm" style="display: none;">
+                    <div class="input-group">
+                        <label for="fullName">Full Name:</label>
+                        <input type="text" id="fullName" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="address">Address:</label>
+                        <textarea id="address" rows="3" required></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label for="phone">Phone Number:</label>
+                        <input type="tel" id="phone" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn" id="claimButton">Claim Reward</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let user = null;
+        let selectedReward = null;
+
+        async function loadUserData() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Please login first');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/profile', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    user = await response.json();
+                    document.getElementById('userPoints').textContent = user.points || 0;
+                    document.getElementById('dropdownPoints').textContent = (user.points || 0) + ' Points';
+                    document.getElementById('userInitial').textContent = (user.username || 'U').charAt(0).toUpperCase();
+                } else if (response.status === 401 || response.status === 403) {
+                    alert('Session expired. Please login again.');
+                    logout();
+                }
+            } catch (error) {
+                console.log('Network error, using cached data');
+            }
+        }
+
+        async function loadRewardsCatalog() {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch('/api/rewards/catalog', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const rewards = await response.json();
+                    displayRewardsCatalog(rewards);
+                }
+            } catch (error) {
+                document.getElementById('rewardsCatalog').innerHTML = '<p>Failed to load rewards</p>';
+            }
+        }
+
+        function displayRewardsCatalog(rewards) {
+            const container = document.getElementById('rewardsCatalog');
+            
+            if (rewards.length === 0) {
+                container.innerHTML = '<p>No rewards available at the moment.</p>';
+                return;
+            }
+
+            const categories = {
+                badge: { name: 'Digital Badges', icon: '🏅', rewards: [] },
+                stickers: { name: 'Eco Stickers', icon: '🌟', rewards: [] },
+                bags: { name: 'Reusable Bags', icon: '🛍️', rewards: [] },
+                utensils: { name: 'Eco Utensils', icon: '🥄', rewards: [] },
+                bottle: { name: 'Water Bottles', icon: '🍶', rewards: [] },
+                seeds: { name: 'Garden Seeds', icon: '🌱', rewards: [] },
+                wraps: { name: 'Food Wraps', icon: '📦', rewards: [] }
+            };
+
+            rewards.forEach(reward => {
+                if (categories[reward.category]) {
+                    categories[reward.category].rewards.push(reward);
+                }
+            });
+
+            container.innerHTML = Object.values(categories)
+                .filter(cat => cat.rewards.length > 0)
+                .map(category => `
+                    <div class="reward-category">
+                        <h3>${category.icon} ${category.name}</h3>
+                        <div class="rewards-grid">
+                            ${category.rewards.map(reward => `
+                                <div class="reward-card ${user && user.points >= reward.points_required ? 'affordable' : 'expensive'}">
+                                    <div class="reward-header">
+                                        <h4>${reward.name}</h4>
+                                        <div class="points-badge">${reward.points_required} pts</div>
+                                    </div>
+                                    <p>${reward.description}</p>
+                                    <button class="btn ${user && user.points >= reward.points_required ? '' : 'disabled'}" 
+                                            onclick="openClaimModal(${reward.id})" 
+                                            ${user && user.points >= reward.points_required ? '' : 'disabled'}>
+                                        ${user && user.points >= reward.points_required ? 'Claim Now' : 'Insufficient Points'}
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('');
+        }
+
+        async function loadMyClaims() {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch('/api/rewards/claims', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const claims = await response.json();
+                    displayMyClaims(claims);
+                    document.getElementById('claimedCount').textContent = claims.length;
+                }
+            } catch (error) {
+                document.getElementById('myClaims').innerHTML = '<p>Failed to load claims</p>';
+            }
+        }
+
+        function displayMyClaims(claims) {
+            const container = document.getElementById('myClaims');
+            
+            if (claims.length === 0) {
+                container.innerHTML = '<p>You haven\'t claimed any rewards yet. Visit the catalog to start earning!</p>';
+                return;
+            }
+
+            container.innerHTML = claims.map(claim => `
+                <div class="claim-card">
+                    <div class="claim-header">
+                        <h4>${claim.name}</h4>
+                        <span class="status-${claim.status}">${claim.status.toUpperCase()}</span>
+                    </div>
+                    <p>${claim.description}</p>
+                    <div class="claim-details">
+                        <span>Points Used: ${claim.points_required}</span>
+                        <span>Claimed: ${new Date(claim.claimed_at).toLocaleDateString()}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openClaimModal(rewardId) {
+            const token = localStorage.getItem('token');
+            fetch('/api/rewards/catalog', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(response => response.json())
+            .then(rewards => {
+                selectedReward = rewards.find(r => r.id === rewardId);
+                if (selectedReward) {
+                    document.getElementById('rewardDetails').innerHTML = `
+                        <div class="reward-summary">
+                            <h3>${selectedReward.name}</h3>
+                            <p>${selectedReward.description}</p>
+                            <div class="points-cost">Cost: ${selectedReward.points_required} points</div>
+                        </div>
+                    `;
+                    
+                    const shippingForm = document.getElementById('shippingForm');
+                    if (selectedReward.type === 'physical') {
+                        shippingForm.style.display = 'block';
+                    } else {
+                        shippingForm.style.display = 'none';
+                    }
+                    
+                    document.getElementById('claimModal').style.display = 'block';
+                }
+            });
+        }
+
+        function closeClaimModal() {
+            document.getElementById('claimModal').style.display = 'none';
+            selectedReward = null;
+        }
+
+        async function submitClaim(event) {
+            event.preventDefault();
+            
+            if (!selectedReward) return;
+            
+            let shippingInfo = null;
+            if (selectedReward.type === 'physical') {
+                shippingInfo = JSON.stringify({
+                    fullName: document.getElementById('fullName').value,
+                    address: document.getElementById('address').value,
+                    phone: document.getElementById('phone').value
+                });
+            }
+
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch('/api/rewards/claim', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        rewardId: selectedReward.id,
+                        shippingInfo: shippingInfo
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    alert(`Reward claimed successfully! ${data.pointsDeducted} points deducted.`);
+                    closeClaimModal();
+                    loadUserData();
+                    loadRewardsCatalog();
+                    loadMyClaims();
+                } else {
+                    alert(data.error || 'Failed to claim reward');
+                }
+            } catch (error) {
+                alert('Failed to claim reward');
+            }
+        }
+
+        function showRewardTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('[id$="Tab"]').forEach(t => t.style.display = 'none');
+            
+            event.target.classList.add('active');
+            document.getElementById(tab + 'Tab').style.display = 'block';
+            
+            if (tab === 'claims') {
+                loadMyClaims();
+            }
+        }
+
+        function toggleProfileDropdown() {
+            const menu = document.getElementById('profileDropdownMenu');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.profile-dropdown')) {
+                document.getElementById('profileDropdownMenu').style.display = 'none';
+            }
+        });
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('claimModal');
+            if (event.target === modal) {
+                closeClaimModal();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserData();
+            loadRewardsCatalog();
+        });
+    </script>
+
+    <style>
+        .reward-tabs {
+            display: flex;
+            margin-bottom: 2rem;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            background: var(--option-bg);
+            color: var(--text-color);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+        }
+        .tab-btn.active {
+            border-bottom-color: #667eea;
+            background: var(--card-bg);
+        }
+        .reward-category {
+            margin-bottom: 2rem;
+        }
+        .reward-category h3 {
+            margin-bottom: 1rem;
+            color: #667eea;
+        }
+        .rewards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+        .reward-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+        .reward-card:hover {
+            transform: translateY(-5px);
+        }
+        .reward-card.affordable {
+            border-color: #28a745;
+        }
+        .reward-card.expensive {
+            border-color: #dc3545;
+            opacity: 0.7;
+        }
+        .reward-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .points-badge {
+            background: #667eea;
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        .claim-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .claim-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .claim-details {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 1rem;
+        }
+        .status-pending { color: #ffc107; font-weight: bold; }
+        .status-approved { color: #28a745; font-weight: bold; }
+        .status-shipped { color: #17a2b8; font-weight: bold; }
+        .status-rejected { color: #dc3545; font-weight: bold; }
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: var(--card-bg);
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+        .close {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            font-size: 2rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+        .close:hover {
+            color: var(--text-color);
+        }
+        .reward-summary {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .points-cost {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-top: 1rem;
+        }
+        .big-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .btn.disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+    </style>
+</body>
+</html>
