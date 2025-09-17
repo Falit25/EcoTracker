@@ -425,6 +425,135 @@ app.get('/api/admin/users', authenticateAdmin, async (req, res) => {
     }
 });
 
+app.get('/api/admin/submissions', authenticateAdmin, async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT s.*, u.username
+            FROM submissions s
+            JOIN users u ON s.user_id = u.id
+            ORDER BY s.submitted_at DESC
+        `);
+        res.json(result.rows);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to load submissions' });
+    }
+});
+
+app.put('/api/admin/submission/:id/approve', authenticateAdmin, async (req, res) => {
+    const { id } = req.params;
+    const { points } = req.body;
+    
+    try {
+        await db.query('BEGIN');
+        
+        // Get submission details
+        const submissionResult = await db.query(
+            'SELECT user_id FROM submissions WHERE id = $1',
+            [id]
+        );
+        
+        if (submissionResult.rows.length === 0) {
+            await db.query('ROLLBACK');
+            return res.status(404).json({ error: 'Submission not found' });
+        }
+        
+        const userId = submissionResult.rows[0].user_id;
+        
+        // Update submission status and points
+        await db.query(
+            'UPDATE submissions SET status = $1, points = $2, reviewed_at = CURRENT_TIMESTAMP WHERE id = $3',
+            ['approved', points, id]
+        );
+        
+        // Add points to user
+        await db.query(
+            'UPDATE users SET points = points + $1 WHERE id = $2',
+            [points, userId]
+        );
+        
+        // Add reward record
+        await db.query(
+            'INSERT INTO rewards (user_id, points, description) VALUES ($1, $2, $3)',
+            [userId, points, 'Evidence submission approved']
+        );
+        
+        await db.query('COMMIT');
+        res.json({ success: true });
+    } catch (error) {
+        await db.query('ROLLBACK');
+        res.status(500).json({ error: 'Failed to approve submission' });
+    }
+});
+
+app.put('/api/admin/submission/:id/reject', authenticateAdmin, async (req, res) => {
+    const { id } = req.params;
+    
+    try {
+        await db.query(
+            'UPDATE submissions SET status = $1, reviewed_at = CURRENT_TIMESTAMP WHERE id = $2',
+            ['rejected', id]
+        );
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to reject submission' });
+    }
+});
+
+app.get('/api/admin/user/:id', authenticateAdmin, async (req, res) => {
+    const { id } = req.params;
+    
+    try {
+        const userResult = await db.query(
+            'SELECT * FROM users WHERE id = $1',
+            [id]
+        );
+        
+        const quizzesResult = await db.query(
+            'SELECT * FROM quiz_results WHERE user_id = $1 ORDER BY completed_at DESC',
+            [id]
+        );
+        
+        const rewardsResult = await db.query(
+            'SELECT * FROM rewards WHERE user_id = $1 ORDER BY earned_at DESC',
+            [id]
+        );
+        
+        res.json({
+            user: userResult.rows[0],
+            quizzes: quizzesResult.rows,
+            rewards: rewardsResult.rows
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to load user details' });
+    }
+});
+
+app.delete('/api/admin/user/:id', authenticateAdmin, async (req, res) => {
+    const { id } = req.params;
+    
+    try {
+        await db.query('DELETE FROM users WHERE id = $1', [id]);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete user' });
+    }
+});
+
+app.put('/api/admin/user/:id/suspend', authenticateAdmin, async (req, res) => {
+    const { id } = req.params;
+    const { suspended } = req.body;
+    
+    try {
+        await db.query(
+            'UPDATE users SET suspended = $1 WHERE id = $2',
+            [suspended ? 1 : 0, id]
+        );
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update user status' });
+    }
+});
+
 app.get('/api/admin/reward-claims', authenticateAdmin, async (req, res) => {
     try {
         const result = await db.query(`
