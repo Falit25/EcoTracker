@@ -101,6 +101,27 @@ const initDB = async () => {
             reviewed_at TIMESTAMP
         )`);
 
+        await db.query(`CREATE TABLE IF NOT EXISTS carbon_calculations (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id),
+            total_footprint REAL,
+            transport_emissions REAL,
+            energy_emissions REAL,
+            food_emissions REAL,
+            lifestyle_emissions REAL,
+            calculated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )`);
+
+        await db.query(`CREATE TABLE IF NOT EXISTS weekly_games (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id),
+            game_type TEXT,
+            week_number INTEGER,
+            year INTEGER,
+            completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user_id, game_type, week_number, year)
+        )`);
+
         // Insert default rewards if table is empty
         const rewardCount = await db.query('SELECT COUNT(*) FROM available_rewards');
         if (parseInt(rewardCount.rows[0].count) === 0) {
@@ -407,6 +428,86 @@ app.get('/api/rewards/claims', authenticateToken, async (req, res) => {
         res.json(result.rows);
     } catch (error) {
         res.status(500).json({ error: 'Failed to load claims' });
+    }
+});
+
+// Carbon Calculator routes
+app.post('/api/calculator/submit', authenticateToken, async (req, res) => {
+    const { carbonFootprint, breakdown } = req.body;
+    const points = 10;
+    
+    try {
+        await db.query('BEGIN');
+        
+        // Save calculation
+        await db.query(
+            'INSERT INTO carbon_calculations (user_id, total_footprint, transport_emissions, energy_emissions, food_emissions, lifestyle_emissions) VALUES ($1, $2, $3, $4, $5, $6)',
+            [req.user.id, carbonFootprint, breakdown.transport, breakdown.energy, breakdown.food, breakdown.lifestyle]
+        );
+        
+        // Award points
+        await db.query(
+            'UPDATE users SET points = points + $1 WHERE id = $2',
+            [points, req.user.id]
+        );
+        
+        await db.query(
+            'INSERT INTO rewards (user_id, points, description) VALUES ($1, $2, $3)',
+            [req.user.id, points, 'Completed carbon footprint calculation']
+        );
+        
+        await db.query('COMMIT');
+        res.json({ success: true, points });
+    } catch (error) {
+        await db.query('ROLLBACK');
+        res.status(500).json({ error: 'Failed to save calculation' });
+    }
+});
+
+// Weekly Games routes
+app.post('/api/game/complete', authenticateToken, async (req, res) => {
+    const { gameType } = req.body;
+    const points = 5;
+    const currentDate = new Date();
+    const weekNumber = Math.ceil(((currentDate - new Date(currentDate.getFullYear(), 0, 1)) / 86400000 + new Date(currentDate.getFullYear(), 0, 1).getDay() + 1) / 7);
+    const year = currentDate.getFullYear();
+    
+    try {
+        await db.query('BEGIN');
+        
+        // Check if already played this week
+        const existingGame = await db.query(
+            'SELECT id FROM weekly_games WHERE user_id = $1 AND game_type = $2 AND week_number = $3 AND year = $4',
+            [req.user.id, gameType, weekNumber, year]
+        );
+        
+        if (existingGame.rows.length > 0) {
+            await db.query('ROLLBACK');
+            return res.status(400).json({ error: 'Already played this week' });
+        }
+        
+        // Record game completion
+        await db.query(
+            'INSERT INTO weekly_games (user_id, game_type, week_number, year) VALUES ($1, $2, $3, $4)',
+            [req.user.id, gameType, weekNumber, year]
+        );
+        
+        // Award points
+        await db.query(
+            'UPDATE users SET points = points + $1 WHERE id = $2',
+            [points, req.user.id]
+        );
+        
+        await db.query(
+            'INSERT INTO rewards (user_id, points, description) VALUES ($1, $2, $3)',
+            [req.user.id, points, `Completed weekly ${gameType} game`]
+        );
+        
+        await db.query('COMMIT');
+        res.json({ success: true, points });
+    } catch (error) {
+        await db.query('ROLLBACK');
+        res.status(500).json({ error: 'Failed to complete game' });
     }
 });
 
