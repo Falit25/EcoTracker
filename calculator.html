@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carbon Calculator - EcoTrack</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <div class="profile-dropdown" style="position: absolute; top: 1rem; right: 1rem;">
+            <div class="profile-trigger" onclick="toggleProfileDropdown()" style="background: rgba(255,255,255,0.2); padding: 0.8rem; border-radius: 50%; cursor: pointer; backdrop-filter: blur(10px); border: 2px solid rgba(255,255,255,0.3); width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                <span style="color: white; font-size: 1.2rem;" id="userInitial">U</span>
+            </div>
+            <div id="profileDropdownMenu" class="profile-menu" style="display: none; position: absolute; top: 70px; right: 0; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 1rem; width: 250px; box-shadow: 0 10px 30px var(--shadow); z-index: 1000;">
+                <div style="text-align: center; margin-bottom: 1rem;">
+                    <div style="font-size: 1.2rem; font-weight: bold; color: #28a745;" id="dropdownPoints">0 Points</div>
+                </div>
+                <hr style="border-color: var(--border-color); margin-bottom: 1rem;">
+                <button onclick="logout()" class="btn" style="width: 100%; background: #dc3545;">🚪 Logout</button>
+            </div>
+        </div>
+        <h1>🌱 Smart Carbon Calculator</h1>
+        <p>Calculate your real carbon footprint with precision</p>
+        <a href="dashboard.html" class="btn" style="position: absolute; top: 3.5rem; left: 1rem;">← Back to Dashboard</a>
+    </header>
+
+    <main>
+        <!-- Total Footprint Display -->
+        <div class="viz-container">
+            <div class="total-footprint">
+                <h2>Your Carbon Footprint</h2>
+                <div class="footprint-display">
+                    <div class="footprint-number" id="totalFootprint">0.0</div>
+                    <div class="footprint-unit">tons CO₂/year</div>
+                </div>
+                <div class="footprint-comparison">
+                    <div class="comparison-item">
+                        <span>Global Average: 4.8 tons</span>
+                    </div>
+                    <div class="comparison-item">
+                        <span>Sustainable Target: 2.3 tons</span>
+                    </div>
+                </div>
+                <button class="btn" onclick="saveFootprint()" id="saveBtn" style="display: none;">💾 Save & Earn Points</button>
+            </div>
+        </div>
+
+        <!-- Calculator Grid -->
+        <div class="calculator-grid">
+            <!-- Transport Calculator -->
+            <div class="calc-card">
+                <div class="calc-header">
+                    <div class="calc-icon">🚗</div>
+                    <h3>Transport</h3>
+                    <div class="calc-result" id="transportResult">0.0 tons</div>
+                </div>
+                <div class="calc-inputs">
+                    <div class="input-group">
+                        <label>Weekly driving (miles):</label>
+                        <input type="number" id="weeklyMiles" placeholder="150" oninput="calculateTransport()">
+                    </div>
+                    <div class="input-group">
+                        <label>Car type:</label>
+                        <select id="carType" onchange="calculateTransport()">
+                            <option value="1">Gas Car (25 mpg)</option>
+                            <option value="0.7">Efficient Car (35 mpg)</option>
+                            <option value="0.3">Hybrid (50 mpg)</option>
+                            <option value="0.1">Electric Car</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Annual flights:</label>
+                        <input type="number" id="annualFlights" placeholder="2" oninput="calculateTransport()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Energy Calculator -->
+            <div class="calc-card">
+                <div class="calc-header">
+                    <div class="calc-icon">⚡</div>
+                    <h3>Energy</h3>
+                    <div class="calc-result" id="energyResult">0.0 tons</div>
+                </div>
+                <div class="calc-inputs">
+                    <div class="input-group">
+                        <label>Monthly electricity bill ($):</label>
+                        <input type="number" id="electricityBill" placeholder="120" oninput="calculateEnergy()">
+                    </div>
+                    <div class="input-group">
+                        <label>Home size:</label>
+                        <select id="homeSize" onchange="calculateEnergy()">
+                            <option value="0.8">Apartment</option>
+                            <option value="1">Small House</option>
+                            <option value="1.3">Medium House</option>
+                            <option value="1.6">Large House</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Energy source:</label>
+                        <select id="energySource" onchange="calculateEnergy()">
+                            <option value="1">Grid Mix</option>
+                            <option value="0.7">Partial Renewable</option>
+                            <option value="0.3">Mostly Renewable</option>
+                            <option value="0.1">100% Renewable</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Food Calculator -->
+            <div class="calc-card">
+                <div class="calc-header">
+                    <div class="calc-icon">🍖</div>
+                    <h3>Food</h3>
+                    <div class="calc-result" id="foodResult">0.0 tons</div>
+                </div>
+                <div class="calc-inputs">
+                    <div class="input-group">
+                        <label>Meat meals per week:</label>
+                        <input type="number" id="meatMeals" placeholder="7" oninput="calculateFood()">
+                    </div>
+                    <div class="input-group">
+                        <label>Dairy servings per day:</label>
+                        <input type="number" id="dairyServings" placeholder="2" oninput="calculateFood()">
+                    </div>
+                    <div class="input-group">
+                        <label>Food source:</label>
+                        <select id="foodSource" onchange="calculateFood()">
+                            <option value="1">Mixed</option>
+                            <option value="0.8">Some Local</option>
+                            <option value="0.6">Mostly Local</option>
+                            <option value="0.4">All Local/Organic</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lifestyle Calculator -->
+            <div class="calc-card">
+                <div class="calc-header">
+                    <div class="calc-icon">🛍️</div>
+                    <h3>Lifestyle</h3>
+                    <div class="calc-result" id="lifestyleResult">0.0 tons</div>
+                </div>
+                <div class="calc-inputs">
+                    <div class="input-group">
+                        <label>New clothes per month:</label>
+                        <input type="number" id="newClothes" placeholder="3" oninput="calculateLifestyle()">
+                    </div>
+                    <div class="input-group">
+                        <label>Online orders per month:</label>
+                        <input type="number" id="onlineOrders" placeholder="5" oninput="calculateLifestyle()">
+                    </div>
+                    <div class="input-group">
+                        <label>Consumption style:</label>
+                        <select id="consumptionStyle" onchange="calculateLifestyle()">
+                            <option value="1">Average Consumer</option>
+                            <option value="0.7">Conscious Buyer</option>
+                            <option value="0.4">Minimalist</option>
+                            <option value="0.2">Zero Waste</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Weekly Mini Games -->
+        <div class="viz-container">
+            <h2>🎮 Weekly Eco Challenges</h2>
+            <div class="games-grid">
+                <div class="game-card" id="game1">
+                    <div class="game-icon">🌱</div>
+                    <h4>Plant Tracker</h4>
+                    <p>Log plants you've watered today</p>
+                    <button class="btn game-btn" onclick="playGame('plant')">Play (+5 pts)</button>
+                    <div class="game-status" id="plantStatus"></div>
+                </div>
+                <div class="game-card" id="game2">
+                    <div class="game-icon">♻️</div>
+                    <h4>Recycle Quest</h4>
+                    <p>Sort items into correct bins</p>
+                    <button class="btn game-btn" onclick="playGame('recycle')">Play (+5 pts)</button>
+                    <div class="game-status" id="recycleStatus"></div>
+                </div>
+                <div class="game-card" id="game3">
+                    <div class="game-icon">💡</div>
+                    <h4>Energy Saver</h4>
+                    <p>Find energy-wasting appliances</p>
+                    <button class="btn game-btn" onclick="playGame('energy')">Play (+5 pts)</button>
+                    <div class="game-status" id="energyStatus"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommendations -->
+        <div class="viz-container">
+            <h2>📋 Personalized Recommendations</h2>
+            <div id="recommendations">
+                <p>Complete the calculators above to get personalized recommendations!</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Game Modals -->
+    <div id="gameModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeGameModal()">&times;</span>
+            <div id="gameContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let user = null;
+        let footprintData = {
+            transport: 0,
+            energy: 0,
+            food: 0,
+            lifestyle: 0
+        };
+
+        // Load user data
+        async function loadUserData() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Please login first');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/profile', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    user = await response.json();
+                    document.getElementById('dropdownPoints').textContent = (user.points || 0) + ' Points';
+                    document.getElementById('userInitial').textContent = (user.username || 'U').charAt(0).toUpperCase();
+                    checkWeeklyGames();
+                }
+            } catch (error) {
+                console.log('Network error');
+            }
+        }
+
+        // Transport Calculator
+        function calculateTransport() {
+            const weeklyMiles = parseFloat(document.getElementById('weeklyMiles').value) || 0;
+            const carType = parseFloat(document.getElementById('carType').value);
+            const annualFlights = parseFloat(document.getElementById('annualFlights').value) || 0;
+
+            // Realistic calculations
+            const annualMiles = weeklyMiles * 52;
+            const carEmissions = (annualMiles / 25) * 19.6 * 0.00220462 * carType; // lbs to tons
+            const flightEmissions = annualFlights * 0.5; // 0.5 tons per average flight
+
+            footprintData.transport = carEmissions + flightEmissions;
+            document.getElementById('transportResult').textContent = footprintData.transport.toFixed(1) + ' tons';
+            updateTotal();
+        }
+
+        // Energy Calculator
+        function calculateEnergy() {
+            const monthlyBill = parseFloat(document.getElementById('electricityBill').value) || 0;
+            const homeSize = parseFloat(document.getElementById('homeSize').value);
+            const energySource = parseFloat(document.getElementById('energySource').value);
+
+            // $1 ≈ 10 kWh, 1 kWh ≈ 0.0005 tons CO2
+            const annualKwh = monthlyBill * 12 * 10 * homeSize;
+            footprintData.energy = annualKwh * 0.0005 * energySource;
+            
+            document.getElementById('energyResult').textContent = footprintData.energy.toFixed(1) + ' tons';
+            updateTotal();
+        }
+
+        // Food Calculator
+        function calculateFood() {
+            const meatMeals = parseFloat(document.getElementById('meatMeals').value) || 0;
+            const dairyServings = parseFloat(document.getElementById('dairyServings').value) || 0;
+            const foodSource = parseFloat(document.getElementById('foodSource').value);
+
+            // Realistic food emissions
+            const meatEmissions = meatMeals * 52 * 0.01; // 0.01 tons per meat meal
+            const dairyEmissions = dairyServings * 365 * 0.002; // 0.002 tons per dairy serving
+            const baseFood = 0.5; // Base food emissions
+
+            footprintData.food = (meatEmissions + dairyEmissions + baseFood) * foodSource;
+            document.getElementById('foodResult').textContent = footprintData.food.toFixed(1) + ' tons';
+            updateTotal();
+        }
+
+        // Lifestyle Calculator
+        function calculateLifestyle() {
+            const newClothes = parseFloat(document.getElementById('newClothes').value) || 0;
+            const onlineOrders = parseFloat(document.getElementById('onlineOrders').value) || 0;
+            const consumptionStyle = parseFloat(document.getElementById('consumptionStyle').value);
+
+            // Lifestyle emissions
+            const clothesEmissions = newClothes * 12 * 0.02; // 0.02 tons per clothing item
+            const shippingEmissions = onlineOrders * 12 * 0.005; // 0.005 tons per order
+            const baseConsumption = 0.8; // Base consumption
+
+            footprintData.lifestyle = (clothesEmissions + shippingEmissions + baseConsumption) * consumptionStyle;
+            document.getElementById('lifestyleResult').textContent = footprintData.lifestyle.toFixed(1) + ' tons';
+            updateTotal();
+        }
+
+        // Update total footprint
+        function updateTotal() {
+            const total = footprintData.transport + footprintData.energy + footprintData.food + footprintData.lifestyle;
+            document.getElementById('totalFootprint').textContent = total.toFixed(1);
+            
+            if (total > 0) {
+                document.getElementById('saveBtn').style.display = 'block';
+                generateRecommendations(total);
+            }
+        }
+
+        // Generate recommendations
+        function generateRecommendations(total) {
+            let recommendations = [];
+            
+            if (footprintData.transport > 2) {
+                recommendations.push("🚗 Consider carpooling or public transport");
+                recommendations.push("✈️ Reduce flights or offset carbon");
+            }
+            if (footprintData.energy > 2) {
+                recommendations.push("⚡ Switch to renewable energy");
+                recommendations.push("🏠 Improve home insulation");
+            }
+            if (footprintData.food > 2) {
+                recommendations.push("🥗 Try meatless Mondays");
+                recommendations.push("🌱 Buy local, seasonal produce");
+            }
+            if (footprintData.lifestyle > 1) {
+                recommendations.push("♻️ Buy second-hand items");
+                recommendations.push("📦 Reduce online shopping");
+            }
+
+            const container = document.getElementById('recommendations');
+            if (recommendations.length > 0) {
+                container.innerHTML = `
+                    <h4>Based on your footprint of ${total.toFixed(1)} tons CO₂/year:</h4>
+                    <ul>${recommendations.map(rec => `<li>${rec}</li>`).join('')}</ul>
+                `;
+            }
+        }
+
+        // Save footprint and earn points
+        async function saveFootprint() {
+            const total = footprintData.transport + footprintData.energy + footprintData.food + footprintData.lifestyle;
+            const token = localStorage.getItem('token');
+            
+            try {
+                const response = await fetch('/api/calculator/submit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        carbonFootprint: total,
+                        breakdown: footprintData
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Footprint saved! +10 points earned!');
+                    loadUserData();
+                    document.getElementById('saveBtn').style.display = 'none';
+                }
+            } catch (error) {
+                alert('Failed to save footprint');
+            }
+        }
+
+        // Weekly games system
+        function checkWeeklyGames() {
+            const lastPlayed = JSON.parse(localStorage.getItem('weeklyGames') || '{}');
+            const currentWeek = getWeekNumber();
+            
+            ['plant', 'recycle', 'energy'].forEach(game => {
+                const status = document.getElementById(game + 'Status');
+                if (lastPlayed[game] === currentWeek) {
+                    status.textContent = '✅ Completed this week';
+                    status.style.color = '#28a745';
+                } else {
+                    status.textContent = '🎯 Available';
+                    status.style.color = '#667eea';
+                }
+            });
+        }
+
+        function getWeekNumber() {
+            const now = new Date();
+            const start = new Date(now.getFullYear(), 0, 1);
+            return Math.ceil(((now - start) / 86400000 + start.getDay() + 1) / 7);
+        }
+
+        // Mini games
+        function playGame(gameType) {
+            const lastPlayed = JSON.parse(localStorage.getItem('weeklyGames') || '{}');
+            const currentWeek = getWeekNumber();
+            
+            if (lastPlayed[gameType] === currentWeek) {
+                alert('You already played this game this week! Come back next week for more points.');
+                return;
+            }
+
+            // Show game modal
+            document.getElementById('gameModal').style.display = 'block';
+            
+            if (gameType === 'plant') {
+                showPlantGame();
+            } else if (gameType === 'recycle') {
+                showRecycleGame();
+            } else if (gameType === 'energy') {
+                showEnergyGame();
+            }
+        }
+
+        function showPlantGame() {
+            document.getElementById('gameContent').innerHTML = `
+                <h3>🌱 Plant Tracker</h3>
+                <p>How many plants did you water today?</p>
+                <input type="number" id="plantCount" placeholder="Enter number" min="1" max="20">
+                <br><br>
+                <button class="btn" onclick="completeGame('plant')">Submit</button>
+            `;
+        }
+
+        function showRecycleGame() {
+            const items = ['Plastic Bottle', 'Banana Peel', 'Newspaper', 'Glass Jar'];
+            const bins = ['Plastic', 'Compost', 'Paper', 'Glass'];
+            
+            document.getElementById('gameContent').innerHTML = `
+                <h3>♻️ Recycle Quest</h3>
+                <p>Drag items to correct bins:</p>
+                <div class="recycle-game">
+                    ${items.map((item, i) => `<div class="item" data-correct="${i}">${item}</div>`).join('')}
+                    <div class="bins">
+                        ${bins.map((bin, i) => `<div class="bin" data-bin="${i}">${bin}</div>`).join('')}
+                    </div>
+                </div>
+                <button class="btn" onclick="completeGame('recycle')">Complete</button>
+            `;
+        }
+
+        function showEnergyGame() {
+            document.getElementById('gameContent').innerHTML = `
+                <h3>💡 Energy Saver</h3>
+                <p>Which appliances waste the most energy?</p>
+                <div class="energy-quiz">
+                    <label><input type="checkbox" value="old-fridge"> Old Refrigerator</label><br>
+                    <label><input type="checkbox" value="led-bulb"> LED Bulb</label><br>
+                    <label><input type="checkbox" value="space-heater"> Space Heater</label><br>
+                    <label><input type="checkbox" value="laptop"> Laptop</label><br>
+                </div>
+                <button class="btn" onclick="completeGame('energy')">Submit</button>
+            `;
+        }
+
+        async function completeGame(gameType) {
+            const token = localStorage.getItem('token');
+            
+            try {
+                const response = await fetch('/api/game/complete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ gameType })
+                });
+
+                if (response.ok) {
+                    // Mark as played this week
+                    const lastPlayed = JSON.parse(localStorage.getItem('weeklyGames') || '{}');
+                    lastPlayed[gameType] = getWeekNumber();
+                    localStorage.setItem('weeklyGames', JSON.stringify(lastPlayed));
+                    
+                    alert('Game completed! +5 points earned!');
+                    closeGameModal();
+                    loadUserData();
+                    checkWeeklyGames();
+                }
+            } catch (error) {
+                alert('Failed to complete game');
+            }
+        }
+
+        function closeGameModal() {
+            document.getElementById('gameModal').style.display = 'none';
+        }
+
+        function toggleProfileDropdown() {
+            const menu = document.getElementById('profileDropdownMenu');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.profile-dropdown')) {
+                document.getElementById('profileDropdownMenu').style.display = 'none';
+            }
+        });
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('gameModal');
+            if (event.target === modal) {
+                closeGameModal();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserData();
+        });
+    </script>
+
+    <style>
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .calc-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .calc-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .calc-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .calc-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .calc-result {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-top: 0.5rem;
+        }
+
+        .calc-inputs {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .total-footprint {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .footprint-display {
+            margin: 1rem 0;
+        }
+
+        .footprint-number {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .footprint-unit {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+        }
+
+        .footprint-comparison {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .game-card {
+            background: var(--option-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .game-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .game-status {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            margin: 10% auto;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .close {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            font-size: 2rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .close:hover {
+            color: var(--text-color);
+        }
+
+        .recycle-game, .energy-quiz {
+            margin: 1rem 0;
+        }
+
+        .item, .bin {
+            padding: 0.5rem;
+            margin: 0.5rem;
+            background: var(--option-bg);
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .energy-quiz label {
+            display: block;
+            margin: 0.5rem 0;
+            padding: 0.5rem;
+            background: var(--option-bg);
+            border-radius: 5px;
+        }
+    </style>
+</body>
+</html>
