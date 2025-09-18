@@ -579,7 +579,8 @@ function generateRecommendations(score) {
 
 async function submitQuiz() {
     const score = calculateScore();
-    const carbonFootprint = (score / 40 * 20).toFixed(1); // Estimate in tons CO2/year
+    // Fixed calculation: Score range 40-200, Carbon footprint 1-5 tons
+    const carbonFootprint = (1 + (score - 40) / 160 * 4).toFixed(1); // 1-5 tons CO2/year
     const impact = getImpactLevel(score);
     const recommendations = generateRecommendations(score);
     
