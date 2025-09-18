@@ -463,18 +463,31 @@ function showQuestion(index) {
     
     questionCounter.textContent = `Question ${index + 1} of ${questions.length}`;
     
-    questionContainer.innerHTML = `
-        <div class="question">
-            <h3>${question.question}</h3>
-            <div class="options">
-                ${question.options.map((option, optionIndex) => `
-                    <div class="option" onclick="selectOption(${optionIndex})" data-option="${optionIndex}">
-                        ${String.fromCharCode(65 + optionIndex)}) ${option.text}
-                    </div>
-                `).join('')}
-            </div>
-        </div>
-    `;
+    // Clear container safely
+    questionContainer.innerHTML = '';
+    
+    // Create elements safely
+    const questionDiv = document.createElement('div');
+    questionDiv.className = 'question';
+    
+    const h3 = document.createElement('h3');
+    h3.textContent = question.question;
+    questionDiv.appendChild(h3);
+    
+    const optionsDiv = document.createElement('div');
+    optionsDiv.className = 'options';
+    
+    question.options.forEach((option, optionIndex) => {
+        const optionDiv = document.createElement('div');
+        optionDiv.className = 'option';
+        optionDiv.setAttribute('data-option', optionIndex);
+        optionDiv.textContent = `${String.fromCharCode(65 + optionIndex)}) ${option.text}`;
+        optionDiv.addEventListener('click', () => selectOption(optionIndex));
+        optionsDiv.appendChild(optionDiv);
+    });
+    
+    questionDiv.appendChild(optionsDiv);
+    questionContainer.appendChild(questionDiv);
     
     // Restore previous selection if exists
     if (answers[index] !== undefined) {
@@ -491,8 +504,11 @@ function selectOption(optionIndex) {
     // Remove previous selection
     document.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
     
-    // Add selection to clicked option
-    document.querySelector(`[data-option="${optionIndex}"]`).classList.add('selected');
+    // Add selection to clicked option with null check
+    const selectedElement = document.querySelector(`[data-option="${optionIndex}"]`);
+    if (selectedElement) {
+        selectedElement.classList.add('selected');
+    }
     
     // Store answer
     answers[currentQuestionIndex] = optionIndex;
@@ -534,13 +550,16 @@ function prevQuestion() {
 
 function updateProgress() {
     const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
-    document.getElementById('progressBar').style.width = progress + '%';
+    const progressBar = document.getElementById('progressBar');
+    if (progressBar) {
+        progressBar.style.width = progress + '%';
+    }
 }
 
 function calculateScore() {
     totalScore = 0;
     for (let i = 0; i < answers.length; i++) {
-        if (answers[i] !== undefined) {
+        if (answers[i] !== undefined && questions[i] && questions[i].options && questions[i].options[answers[i]]) {
             totalScore += questions[i].options[answers[i]].score;
         }
     }
@@ -548,39 +567,64 @@ function calculateScore() {
 }
 
 function getImpactLevel(score) {
-    const maxScore = questions.length * 5; // Maximum possible score
-    const percentage = (score / maxScore) * 100;
-    
-    if (percentage <= 30) {
-        return { level: 'Low Impact', class: 'low-impact', message: 'Excellent! You have a very low carbon footprint.' };
-    } else if (percentage <= 60) {
-        return { level: 'Medium Impact', class: 'medium-impact', message: 'Good effort! There\'s room for improvement.' };
+    // Based on realistic score ranges (40-200)
+    if (score <= 80) {
+        return { level: 'Low Impact', class: 'low-impact', message: 'Excellent! You have a very low carbon footprint (4-7 tons/year).' };
+    } else if (score <= 140) {
+        return { level: 'Medium Impact', class: 'medium-impact', message: 'Good effort! You\'re near the global average (7-12 tons/year).' };
     } else {
-        return { level: 'High Impact', class: 'high-impact', message: 'Consider making significant lifestyle changes.' };
+        return { level: 'High Impact', class: 'high-impact', message: 'Consider making significant lifestyle changes (12-16+ tons/year).' };
     }
 }
 
 function generateRecommendations(score) {
-    const recommendations = [
-        "🌱 Switch to renewable energy sources",
-        "🚲 Use public transport or bike more often",
-        "♻️ Reduce single-use plastics",
-        "💧 Install water-saving fixtures",
-        "🥗 Consider reducing meat consumption",
-        "🏠 Improve home insulation",
-        "📱 Buy second-hand electronics",
-        "🌳 Plant trees or support reforestation",
-        "💡 Use LED bulbs and energy-efficient appliances",
-        "🛒 Shop locally and seasonally"
-    ];
+    let recommendations = [];
     
-    return recommendations.slice(0, 5); // Return top 5 recommendations
+    if (score <= 80) {
+        // Low impact - maintain good habits
+        recommendations = [
+            "🌟 Keep up your excellent eco-friendly habits!",
+            "📢 Share your knowledge with friends and family",
+            "🌱 Consider carbon offsetting for remaining emissions",
+            "🔬 Explore cutting-edge green technologies",
+            "🏆 Become a sustainability advocate in your community"
+        ];
+    } else if (score <= 140) {
+        // Medium impact - targeted improvements
+        recommendations = [
+            "🚲 Use public transport or bike more often",
+            "🥗 Reduce meat consumption to 2-3 times per week",
+            "🏠 Improve home insulation and use smart thermostats",
+            "♻️ Eliminate single-use plastics completely",
+            "💡 Switch to LED bulbs and energy-efficient appliances"
+        ];
+    } else {
+        // High impact - major lifestyle changes needed
+        recommendations = [
+            "🌱 Switch to 100% renewable energy sources",
+            "✈️ Reduce or eliminate air travel, choose local vacations",
+            "🚗 Consider electric/hybrid vehicle or car-sharing",
+            "🥬 Adopt plant-based diet or significantly reduce meat",
+            "🏠 Major home efficiency upgrades (insulation, windows, HVAC)"
+        ];
+    }
+    
+    return recommendations;
 }
 
 async function submitQuiz() {
     const score = calculateScore();
-    // Fixed calculation: Score range 40-200, Carbon footprint 1-5 tons
-    const carbonFootprint = (1 + (score - 40) / 160 * 4).toFixed(1); // 1-5 tons CO2/year
+    
+    // Realistic calculation based on EPA data:
+    // Best case (score 40): 4 tons CO₂/year (very eco-conscious)
+    // Average case (score 120): 10 tons CO₂/year (typical American)
+    // Worst case (score 200): 16 tons CO₂/year (high consumption)
+    const minFootprint = 4;   // tons CO₂/year
+    const maxFootprint = 16;  // tons CO₂/year
+    const minScore = 40;      // best possible score
+    const maxScore = 200;     // worst possible score
+    
+    const carbonFootprint = (minFootprint + (score - minScore) / (maxScore - minScore) * (maxFootprint - minFootprint)).toFixed(1);
     const impact = getImpactLevel(score);
     const recommendations = generateRecommendations(score);
     
@@ -611,15 +655,35 @@ async function submitQuiz() {
     document.getElementById('quizContent').style.display = 'none';
     document.getElementById('results').style.display = 'block';
     
-    document.getElementById('scoreDisplay').innerHTML = `
-        <div class="impact-score ${impact.class}">${carbonFootprint} tons CO₂/year</div>
-        ${token ? '<p style="color: #28a745; font-weight: bold;">🎉 +10 points earned!</p>' : ''}
-    `;
+    // Update score display safely
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    scoreDisplay.innerHTML = '';
     
-    document.getElementById('impactLevel').innerHTML = `
-        <h3 class="${impact.class}">${impact.level}</h3>
-        <p>${impact.message}</p>
-    `;
+    const scoreDiv = document.createElement('div');
+    scoreDiv.className = `impact-score ${impact.class}`;
+    scoreDiv.textContent = `${carbonFootprint} tons CO₂/year`;
+    scoreDisplay.appendChild(scoreDiv);
+    
+    if (token) {
+        const pointsP = document.createElement('p');
+        pointsP.style.color = '#28a745';
+        pointsP.style.fontWeight = 'bold';
+        pointsP.textContent = '🎉 +10 points earned!';
+        scoreDisplay.appendChild(pointsP);
+    }
+    
+    // Update impact level safely
+    const impactLevel = document.getElementById('impactLevel');
+    impactLevel.innerHTML = '';
+    
+    const h3 = document.createElement('h3');
+    h3.className = impact.class;
+    h3.textContent = impact.level;
+    impactLevel.appendChild(h3);
+    
+    const p = document.createElement('p');
+    p.textContent = impact.message;
+    impactLevel.appendChild(p);
     
     document.getElementById('recommendations').innerHTML = `
         <h4>Personalized Recommendations:</h4>
