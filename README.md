@@ -14,7 +14,7 @@ npm install
 npm start
 
 # Open browser
-http://localhost:3000
+https://ecotracker-b7x4.onrender.com
 ```
 
 ## ✨ Features
@@ -49,14 +49,6 @@ SSH/
 
 ## ⚙️ Setup
 
-**Environment (.env):**
-```env
-DATABASE_URL=postgresql://user:pass@host:port/db
-JWT_SECRET=your-secret-key
-ADMIN_PASSWORD=admin123
-PORT=3000
-```
-
 **Database:** Auto-creates tables on first run
 
 ## 🎯 Usage
@@ -85,11 +77,11 @@ PORT=3000
 
 - **Port in use**: Change PORT in `.env`
 - **Dependencies**: Run `npm install`
-- **Admin login**: Default password `admin123`
+- **Admin login**: Default password 
 - **Database**: Auto-creates tables on startup
 
 ---
 
-**🌐 Server:** http://localhost:3000 | **🔐 Admin:** /admin.html (admin123)
+**🌐 Server:** https://ecotracker-b7x4.onrender.com | **🔐 Admin:** /admin.html
 
 *Built with 💚 for a sustainable future*
