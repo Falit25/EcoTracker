@@ -5,6 +5,8 @@ const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
+const csrf = require('csurf');
 require('dotenv').config();
 
 const app = express();
@@ -18,15 +20,29 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 // Middleware
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 app.use(express.static('.'));
 app.use('/uploads', express.static(uploadsDir));
+
+// Input validation middleware
+const validateInput = (fields) => {
+    return (req, res, next) => {
+        for (const field of fields) {
+            if (!req.body[field] || typeof req.body[field] !== 'string' || req.body[field].trim() === '') {
+                return res.status(400).json({ error: `${field} is required` });
+            }
+        }
+        next();
+    };
+};
 
 // Multer setup
 const storage = multer.diskStorage({
     destination: uploadsDir,
     filename: (req, file, cb) => {
-        cb(null, Date.now() + '-' + file.originalname);
+        // Sanitize filename to prevent path traversal
+        const sanitizedName = path.basename(file.originalname).replace(/[^a-zA-Z0-9.-]/g, '_');
+        cb(null, Date.now() + '-' + sanitizedName);
     }
 });
 const upload = multer({ storage });
@@ -34,7 +50,7 @@ const upload = multer({ storage });
 // Database connection
 const db = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: true } : false
 });
 
 // Initialize database
@@ -174,8 +190,16 @@ const authenticateToken = (req, res, next) => {
 };
 
 // Routes
-app.post('/api/register', async (req, res) => {
+app.post('/api/register', validateInput(['username', 'email', 'password']), async (req, res) => {
     const { username, email, password } = req.body;
+    
+    // Additional validation
+    if (password.length < 6) {
+        return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return res.status(400).json({ error: 'Invalid email format' });
+    }
     
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -197,7 +221,7 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
-app.post('/api/login', async (req, res) => {
+app.post('/api/login', validateInput(['username', 'password']), async (req, res) => {
     const { username, password } = req.body;
     
     try {
@@ -214,7 +238,6 @@ app.post('/api/login', async (req, res) => {
         
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) {
-            console.log('Password mismatch for user:', username);
             return res.status(401).json({ error: 'Invalid credentials' });
         }
         
@@ -232,6 +255,48 @@ app.post('/api/login', async (req, res) => {
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ error: 'Login failed' });
+    }
+});
+
+app.post('/api/reset-account', validateInput(['username', 'newPassword']), async (req, res) => {
+    const { username, newPassword } = req.body;
+    
+    if (newPassword.length < 6) {
+        return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+    
+    try {
+        const userResult = await db.query('SELECT id FROM users WHERE username = $1', [username]);
+        
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Username not found' });
+        }
+        
+        const userId = userResult.rows[0].id;
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        
+        await db.query('BEGIN');
+        
+        // Delete all user data
+        await db.query('DELETE FROM quiz_results WHERE user_id = $1', [userId]);
+        await db.query('DELETE FROM rewards WHERE user_id = $1', [userId]);
+        await db.query('DELETE FROM submissions WHERE user_id = $1', [userId]);
+        await db.query('DELETE FROM reward_claims WHERE user_id = $1', [userId]);
+        await db.query('DELETE FROM carbon_calculations WHERE user_id = $1', [userId]);
+        await db.query('DELETE FROM weekly_games WHERE user_id = $1', [userId]);
+        
+        // Reset user account
+        await db.query(
+            'UPDATE users SET password = $1, points = 0, level = 1, suspended = 0 WHERE id = $2',
+            [hashedPassword, userId]
+        );
+        
+        await db.query('COMMIT');
+        res.json({ success: true, message: 'Account reset successfully' });
+    } catch (error) {
+        await db.query('ROLLBACK');
+        console.error('Reset account error:', error);
+        res.status(500).json({ error: 'Account reset failed' });
     }
 });
 
@@ -254,6 +319,11 @@ app.get('/api/profile', authenticateToken, async (req, res) => {
 
 app.post('/api/quiz/submit', authenticateToken, async (req, res) => {
     const { score, carbonFootprint, answers } = req.body;
+    
+    // Input validation
+    if (typeof score !== 'number' || typeof carbonFootprint !== 'number' || !Array.isArray(answers)) {
+        return res.status(400).json({ error: 'Invalid input data' });
+    }
     const points = 10;
     
     try {
@@ -312,6 +382,9 @@ app.post('/api/submit', authenticateToken, upload.single('file'), async (req, re
     if (!filename) {
         return res.status(400).json({ error: 'File required' });
     }
+    if (!description || description.trim() === '') {
+        return res.status(400).json({ error: 'Description required' });
+    }
     
     try {
         const result = await db.query(
@@ -325,10 +398,15 @@ app.post('/api/submit', authenticateToken, upload.single('file'), async (req, re
 });
 
 // Admin routes
-app.post('/api/admin/login', (req, res) => {
+app.post('/api/admin/login', validateInput(['password']), (req, res) => {
     const { password } = req.body;
     
-    if (password === ADMIN_PASSWORD) {
+    // Use timing-safe comparison
+    const adminPasswordBuffer = Buffer.from(ADMIN_PASSWORD, 'utf8');
+    const inputPasswordBuffer = Buffer.from(password, 'utf8');
+    
+    if (adminPasswordBuffer.length === inputPasswordBuffer.length && 
+        crypto.timingSafeEqual(adminPasswordBuffer, inputPasswordBuffer)) {
         const token = jwt.sign({ admin: true }, JWT_SECRET);
         res.json({ token });
     } else {
@@ -366,6 +444,11 @@ app.get('/api/rewards/catalog', authenticateToken, async (req, res) => {
 
 app.post('/api/rewards/claim', authenticateToken, async (req, res) => {
     const { rewardId, shippingInfo } = req.body;
+    
+    // Input validation
+    if (!rewardId || typeof rewardId !== 'number') {
+        return res.status(400).json({ error: 'Valid reward ID required' });
+    }
     
     try {
         await db.query('BEGIN');
@@ -434,6 +517,11 @@ app.get('/api/rewards/claims', authenticateToken, async (req, res) => {
 // Carbon Calculator routes
 app.post('/api/calculator/submit', authenticateToken, async (req, res) => {
     const { carbonFootprint, breakdown } = req.body;
+    
+    // Input validation
+    if (typeof carbonFootprint !== 'number' || !breakdown || typeof breakdown !== 'object') {
+        return res.status(400).json({ error: 'Invalid input data' });
+    }
     const points = 10;
     
     try {
@@ -465,8 +553,14 @@ app.post('/api/calculator/submit', authenticateToken, async (req, res) => {
 });
 
 // Weekly Games routes
-app.post('/api/game/complete', authenticateToken, async (req, res) => {
+app.post('/api/game/complete', authenticateToken, validateInput(['gameType']), async (req, res) => {
     const { gameType } = req.body;
+    
+    // Validate game type
+    const validGameTypes = ['plant-tracker', 'recycle-quest', 'energy-saver'];
+    if (!validGameTypes.includes(gameType)) {
+        return res.status(400).json({ error: 'Invalid game type' });
+    }
     const points = 5;
     const currentDate = new Date();
     const weekNumber = Math.ceil(((currentDate - new Date(currentDate.getFullYear(), 0, 1)) / 86400000 + new Date(currentDate.getFullYear(), 0, 1).getDay() + 1) / 7);
