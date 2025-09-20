@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - EcoTrack</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <header>
@@ -466,7 +466,7 @@
                                 <td style="padding: 0.8rem;"><span class="status-${claim.status}">${claim.status.toUpperCase()}</span></td>
                                 <td style="padding: 0.8rem;">${new Date(claim.claimed_at).toLocaleDateString()}</td>
                                 <td style="padding: 0.8rem;">
-                                    ${claim.shipping_info ? `<button class="btn" onclick="showShippingInfo('${claim.shipping_info.replace(/'/g, "\\'")}')">View Info</button>` : 'Digital Reward'}
+                                    ${claim.shipping_info ? `<button class="btn" onclick="showShippingInfo(${claim.id})">View Info</button>` : 'Digital Reward'}
                                 </td>
                                 <td style="padding: 0.8rem;">
                                     ${claim.status === 'pending' ? `
@@ -489,12 +489,30 @@
             document.getElementById('pendingSubmissions').textContent = currentPending + pendingClaims;
         }
 
-        function showShippingInfo(shippingInfoStr) {
+        async function showShippingInfo(claimId) {
+            const token = localStorage.getItem('adminToken');
             try {
-                const info = JSON.parse(shippingInfoStr);
-                alert(`Shipping Information:\n\nName: ${info.fullName}\nAddress: ${info.address}\nPhone: ${info.phone}`);
-            } catch (e) {
-                alert('Shipping Info: ' + shippingInfoStr);
+                const response = await fetch('/api/admin/reward-claims', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    const claims = await response.json();
+                    const claim = claims.find(c => c.id === claimId);
+                    
+                    if (claim && claim.shipping_info) {
+                        try {
+                            const info = JSON.parse(claim.shipping_info);
+                            alert(`Shipping Information:\n\nName: ${info.fullName}\nAddress: ${info.address}\nPhone: ${info.phone}`);
+                        } catch (e) {
+                            alert('Shipping Info: ' + claim.shipping_info);
+                        }
+                    } else {
+                        alert('No shipping information available');
+                    }
+                }
+            } catch (error) {
+                alert('Failed to load shipping information');
             }
         }
 
