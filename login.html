@@ -63,8 +63,34 @@
             <div id="message" class="message" style="display: none;"></div>
             
             <div style="text-align: center; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+                <button onclick="showResetAccount()" class="btn" style="background: #ffc107; margin-bottom: 1rem;">🔄 Reset Account</button>
                 <p style="margin-bottom: 1rem; color: var(--text-color); opacity: 0.7;">Administrator Access</p>
                 <a href="admin.html" class="btn" style="background: #dc3545;">Admin Login</a>
+            </div>
+            
+            <!-- Reset Account Modal -->
+            <div id="resetModal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <span class="close" onclick="closeResetModal()">&times;</span>
+                    <h2>⚠️ Reset Account</h2>
+                    <p>This will permanently delete ALL your data:</p>
+                    <ul style="text-align: left; margin: 1rem 0;">
+                        <li>All points and rewards</li>
+                        <li>Quiz history and carbon calculations</li>
+                        <li>Game progress and achievements</li>
+                    </ul>
+                    <form onsubmit="handleResetAccount(event)">
+                        <div class="input-group">
+                            <label for="resetUsername">Enter your username to confirm:</label>
+                            <input type="text" id="resetUsername" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="newPassword">Set new password:</label>
+                            <input type="password" id="newPassword" required>
+                        </div>
+                        <button type="submit" class="btn" style="background: #dc3545;">Reset My Account</button>
+                    </form>
+                </div>
             </div>
         </div>
     </main>
@@ -159,6 +185,53 @@
             }
         }
 
+        function showResetAccount() {
+            document.getElementById('resetModal').style.display = 'block';
+        }
+        
+        function closeResetModal() {
+            document.getElementById('resetModal').style.display = 'none';
+            document.getElementById('resetUsername').value = '';
+            document.getElementById('newPassword').value = '';
+        }
+        
+        async function handleResetAccount(event) {
+            event.preventDefault();
+            const username = document.getElementById('resetUsername').value;
+            const newPassword = document.getElementById('newPassword').value;
+            
+            if (!confirm('Are you absolutely sure? This cannot be undone!')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/reset-account', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, newPassword })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    alert('Account reset successful! You can now login with your new password.');
+                    closeResetModal();
+                    showLogin();
+                } else {
+                    showMessage(data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Reset failed - Server not responding', 'error');
+            }
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('resetModal');
+            if (event.target === modal) {
+                closeResetModal();
+            }
+        }
+        
         document.addEventListener('DOMContentLoaded', function() {
 
         });
@@ -197,6 +270,36 @@
             background: #efe;
             color: #363;
             border: 1px solid #cfc;
+        }
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: var(--card-bg);
+            margin: 10% auto;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            color: var(--text-color);
+        }
+        .close {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            font-size: 2rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+        .close:hover {
+            color: var(--text-color);
         }
     </style>
 </body>
