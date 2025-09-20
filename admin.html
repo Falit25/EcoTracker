@@ -3,635 +3,286 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - EcoTrack</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>3D Emission Visualization - EcoTrack</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
     <header>
 
-        <h1>🔐 EcoTrack Admin Panel</h1>
-        <p>Manage users and view system statistics</p>
-        <button class="btn" onclick="logout()" style="position: absolute; top: 3.5rem; left: 1rem;">Logout</button>
+        <h1>📈 EcoTrack 3D Analytics</h1>
+        <p>Interactive 3D charts showing emissions by sector</p>
+        <a href="dashboard.html" class="btn" style="position: absolute; top: 3.5rem; left: 1rem;">← Back to Dashboard</a>
     </header>
 
     <main>
-        <div id="loginSection" class="calculator-container">
-            <h2>Admin Login</h2>
-            <form onsubmit="adminLogin(event)">
-                <div class="input-group">
-                    <label for="adminPassword">Admin Password:</label>
-                    <div style="position: relative;">
-                        <input type="password" id="adminPassword" required>
-                        <span onclick="togglePassword('adminPassword')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer;">👁️</span>
-                    </div>
-                </div>
-                <button type="submit" class="btn">Login as Admin</button>
-            </form>
-            <div id="loginMessage" class="message" style="display: none;"></div>
+        <div class="viz-container">
+            <h2>Global Carbon Emissions by Sector</h2>
+            <div class="controls">
+                <button class="control-btn" onclick="showGlobalData()">Global Data</button>
+                <button class="control-btn" onclick="showPersonalData()">Personal Impact</button>
+                <button class="control-btn" onclick="showComparison()">Country Comparison</button>
+                <button class="control-btn" onclick="showTrends()">Historical Trends</button>
+            </div>
+            <div id="chart1" style="width:100%;height:500px;"></div>
         </div>
 
-        <div id="adminPanel" style="display: none;">
-            <div class="viz-container">
-                <h2>📊 System Statistics</h2>
-                <div class="features-grid">
-                    <div class="feature-card">
-                        <div class="icon">👥</div>
-                        <h3>Total Users</h3>
-                        <div class="big-number" id="totalUsers">0</div>
-                    </div>
-                    <div class="feature-card">
-                        <div class="icon">🏆</div>
-                        <h3>Total Points</h3>
-                        <div class="big-number" id="totalPoints">0</div>
-                    </div>
-                    <div class="feature-card">
-                        <div class="icon">📝</div>
-                        <h3>Quizzes Taken</h3>
-                        <div class="big-number" id="totalQuizzes">0</div>
-                    </div>
-                    <div class="feature-card">
-                        <div class="icon">📸</div>
-                        <h3>Pending Submissions</h3>
-                        <div class="big-number" id="pendingSubmissions">0</div>
-                    </div>
+        <div class="viz-container">
+            <h2>Emission Sources Breakdown</h2>
+            <div class="controls">
+                <button class="control-btn" onclick="showPieChart()">Pie Chart</button>
+                <button class="control-btn" onclick="showBarChart()">Bar Chart</button>
+                <button class="control-btn" onclick="showSunburst()">Sunburst</button>
+            </div>
+            <div id="chart2" style="width:100%;height:500px;"></div>
+        </div>
+
+        <div class="viz-container">
+            <h2>Regional Emissions Map</h2>
+            <div id="chart3" style="width:100%;height:500px;"></div>
+        </div>
+
+        <div class="info-panel" style="margin-top: 2rem; padding: 2rem; background: var(--option-bg); border-radius: 10px; border: 1px solid var(--border-color);">
+            <h3>📊 Understanding the Data</h3>
+            <div class="data-insights">
+                <div class="insight-card">
+                    <h4>🏭 Energy Production (25%)</h4>
+                    <p>Electricity and heat production from fossil fuels</p>
                 </div>
-            </div>
-
-            <div class="admin-tabs">
-                <button class="tab-btn active" onclick="showTab('users')">Users Management</button>
-                <button class="tab-btn" onclick="showTab('submissions')">Review Submissions</button>
-                <button class="tab-btn" onclick="showTab('rewards')">Reward Claims</button>
-            </div>
-
-            <div id="usersTab" class="viz-container">
-                <h2>👥 All Registered Users</h2>
-                <div id="usersTable">Loading...</div>
-            </div>
-
-            <div id="submissionsTab" class="viz-container" style="display: none;">
-                <h2>📸 User Submissions for Review</h2>
-                <div id="submissionsTable">Loading...</div>
-            </div>
-
-            <div id="rewardsTab" class="viz-container" style="display: none;">
-                <h2>🎁 Reward Claims Management</h2>
-                <div id="rewardClaimsTable">Loading...</div>
-            </div>
-
-            <div id="userDetails" class="viz-container" style="display: none;">
-                <h2>User Details</h2>
-                <div id="userInfo"></div>
-                <button class="btn" onclick="closeUserDetails()">Close</button>
+                <div class="insight-card">
+                    <h4>🌾 Agriculture (24%)</h4>
+                    <p>Livestock, rice cultivation, and land use changes</p>
+                </div>
+                <div class="insight-card">
+                    <h4>🏢 Industry (21%)</h4>
+                    <p>Manufacturing, cement, steel, and chemical production</p>
+                </div>
+                <div class="insight-card">
+                    <h4>🚗 Transportation (14%)</h4>
+                    <p>Road, aviation, shipping, and rail transport</p>
+                </div>
+                <div class="insight-card">
+                    <h4>🏠 Buildings (6%)</h4>
+                    <p>Residential and commercial energy use</p>
+                </div>
+                <div class="insight-card">
+                    <h4>🔥 Other Energy (10%)</h4>
+                    <p>Fugitive emissions, flaring, and other sources</p>
+                </div>
             </div>
         </div>
     </main>
 
     <script>
-        async function adminLogin(event) {
-            event.preventDefault();
-            const password = document.getElementById('adminPassword').value;
-
-            try {
-                const response = await fetch('/api/admin/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password })
-                });
-
-                const data = await response.json();
-                if (response.ok) {
-                    localStorage.setItem('adminToken', data.token);
-                    document.getElementById('loginSection').style.display = 'none';
-                    document.getElementById('adminPanel').style.display = 'block';
-                    loadAdminData();
-                } else {
-                    showMessage(data.error, 'error');
-                }
-            } catch (error) {
-                showMessage('Login failed', 'error');
-            }
-        }
-
-        async function loadAdminData() {
-            const token = localStorage.getItem('adminToken');
-            try {
-                const response = await fetch('/api/admin/users', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (response.ok) {
-                    const users = await response.json();
-                    displayUsers(users);
-                    updateStats(users);
-                    loadSubmissions();
-                    loadRewardClaims();
-                } else {
-                    logout();
-                }
-            } catch (error) {
-                console.error('Failed to load admin data');
-            }
-        }
-
-        function displayUsers(users) {
-            const container = document.getElementById('usersTable');
-            
-            if (users.length === 0) {
-                container.innerHTML = '<p>No users registered yet.</p>';
-                return;
-            }
-
-            container.innerHTML = `
-                <table style="width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 10px; overflow: hidden;">
-                    <thead style="background: var(--option-bg);">
-                        <tr>
-                            <th style="padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color);">ID</th>
-                            <th style="padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color);">Username</th>
-                            <th style="padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color);">Email</th>
-                            <th style="padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color);">Points</th>
-                            <th style="padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color);">Level</th>
-                            <th style="padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color);">Quizzes</th>
-                            <th style="padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color);">Joined</th>
-                            <th style="padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color);">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${users.map(user => `
-                            <tr style="border-bottom: 1px solid var(--border-color);">
-                                <td style="padding: 0.8rem;">${user.id}</td>
-                                <td style="padding: 0.8rem; font-weight: bold;">${user.username}</td>
-                                <td style="padding: 0.8rem;">${user.email}</td>
-                                <td style="padding: 0.8rem; color: #28a745; font-weight: bold;">${user.points}</td>
-                                <td style="padding: 0.8rem;">${user.level}</td>
-                                <td style="padding: 0.8rem;">${user.quiz_count}</td>
-                                <td style="padding: 0.8rem;">${new Date(user.created_at).toLocaleDateString()}</td>
-                                <td style="padding: 0.8rem;">
-                                    <button class="btn" onclick="viewUser(${user.id})" style="margin-right: 0.5rem; padding: 0.3rem 0.8rem; font-size: 0.8rem;">View</button>
-                                    <button class="btn" onclick="suspendUser(${user.id}, ${user.suspended || 0})" style="background: #ffc107; margin-right: 0.5rem; padding: 0.3rem 0.8rem; font-size: 0.8rem;">${user.suspended ? 'Activate' : 'Suspend'}</button>
-                                    <button class="btn" onclick="deleteUser(${user.id})" style="background: #dc3545; padding: 0.3rem 0.8rem; font-size: 0.8rem;">Delete</button>
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-        }
-
-        function updateStats(users) {
-            const totalUsers = users.length;
-            const totalPoints = users.reduce((sum, user) => sum + user.points, 0);
-            const totalQuizzes = users.reduce((sum, user) => sum + (user.quiz_count || 0), 0);
-
-            document.getElementById('totalUsers').textContent = totalUsers;
-            document.getElementById('totalPoints').textContent = totalPoints.toLocaleString();
-            document.getElementById('totalQuizzes').textContent = totalQuizzes;
-            document.getElementById('pendingSubmissions').textContent = '0';
-        }
-
-        async function viewUser(userId) {
-            const token = localStorage.getItem('adminToken');
-            try {
-                const response = await fetch(`/api/admin/user/${userId}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    displayUserDetails(data);
-                }
-            } catch (error) {
-                alert('Failed to load user details');
-            }
-        }
-
-        function displayUserDetails(data) {
-            const { user, quizzes, rewards } = data;
-            
-            document.getElementById('userInfo').innerHTML = `
-                <div class="features-grid">
-                    <div class="feature-card">
-                        <h3>👤 User Info</h3>
-                        <p><strong>ID:</strong> ${user.id}</p>
-                        <p><strong>Username:</strong> ${user.username}</p>
-                        <p><strong>Email:</strong> ${user.email}</p>
-                        <p><strong>Points:</strong> ${user.points}</p>
-                        <p><strong>Level:</strong> ${user.level}</p>
-                        <p><strong>Joined:</strong> ${new Date(user.created_at).toLocaleDateString()}</p>
-                    </div>
-                    <div class="feature-card">
-                        <h3>📊 Quiz Results (${quizzes.length})</h3>
-                        <div style="max-height: 200px; overflow-y: auto;">
-                            ${quizzes.length > 0 ? quizzes.map(quiz => `
-                                <p>Score: ${quiz.score}, Footprint: ${quiz.carbon_footprint} tons - ${new Date(quiz.completed_at).toLocaleDateString()}</p>
-                            `).join('') : '<p>No quizzes taken</p>'}
-                        </div>
-                    </div>
-                    <div class="feature-card">
-                        <h3>🏆 Recent Rewards (${rewards.length})</h3>
-                        <div style="max-height: 200px; overflow-y: auto;">
-                            ${rewards.length > 0 ? rewards.slice(0, 10).map(reward => `
-                                <p>+${reward.points} - ${reward.description} (${new Date(reward.earned_at).toLocaleDateString()})</p>
-                            `).join('') : '<p>No rewards earned</p>'}
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            document.getElementById('userDetails').style.display = 'block';
-        }
-
-        function closeUserDetails() {
-            document.getElementById('userDetails').style.display = 'none';
-        }
-
-        async function deleteUser(userId) {
-            if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-                return;
-            }
-
-            const token = localStorage.getItem('adminToken');
-            try {
-                const response = await fetch(`/api/admin/user/${userId}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (response.ok) {
-                    alert('User deleted successfully');
-                    loadAdminData();
-                } else {
-                    alert('Failed to delete user');
-                }
-            } catch (error) {
-                alert('Failed to delete user');
-            }
-        }
-
-        function logout() {
-            localStorage.removeItem('adminToken');
-            document.getElementById('loginSection').style.display = 'block';
-            document.getElementById('adminPanel').style.display = 'none';
-            document.getElementById('adminPassword').value = '';
-        }
-
-        function showMessage(text, type) {
-            const message = document.getElementById('loginMessage');
-            message.textContent = text;
-            message.className = `message ${type}`;
-            message.style.display = 'block';
-            setTimeout(() => message.style.display = 'none', 3000);
-        }
-
-
-
-        async function suspendUser(userId, currentStatus) {
-            const action = currentStatus ? 'activate' : 'suspend';
-            if (!confirm(`Are you sure you want to ${action} this user?`)) return;
-
-            const token = localStorage.getItem('adminToken');
-            try {
-                const response = await fetch(`/api/admin/user/${userId}/suspend`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ suspended: !currentStatus })
-                });
-
-                if (response.ok) {
-                    alert(`User ${action}d successfully`);
-                    loadAdminData();
-                }
-            } catch (error) {
-                alert(`Failed to ${action} user`);
-            }
-        }
-
-        async function loadSubmissions() {
-            const token = localStorage.getItem('adminToken');
-            try {
-                const response = await fetch('/api/admin/submissions', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (response.ok) {
-                    const submissions = await response.json();
-                    displaySubmissions(submissions);
-                    updatePendingCount(submissions);
-                }
-            } catch (error) {
-                document.getElementById('submissionsTable').innerHTML = '<p>Failed to load submissions</p>';
-            }
-        }
-
-        function displaySubmissions(submissions) {
-            const container = document.getElementById('submissionsTable');
-            
-            if (submissions.length === 0) {
-                container.innerHTML = '<p>No submissions yet.</p>';
-                return;
-            }
-
-            container.innerHTML = `
-                <table style="width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 10px; overflow: hidden;">
-                    <thead style="background: var(--option-bg);">
-                        <tr>
-                            <th style="padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color);">ID</th>
-                            <th style="padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color);">User</th>
-                            <th style="padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color);">File</th>
-                            <th style="padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color);">Description</th>
-                            <th style="padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color);">Status</th>
-                            <th style="padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color);">Submitted</th>
-                            <th style="padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color);">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${submissions.map(sub => `
-                            <tr style="border-bottom: 1px solid var(--border-color);">
-                                <td style="padding: 0.8rem;">${sub.id}</td>
-                                <td style="padding: 0.8rem; font-weight: bold;">${sub.username || 'Unknown'}</td>
-                                <td style="padding: 0.8rem;"><a href="/uploads/${sub.filename}" target="_blank">${sub.filename}</a></td>
-                                <td style="padding: 0.8rem;">${sub.description || 'No description'}</td>
-                                <td style="padding: 0.8rem;"><span class="status-${sub.status}">${sub.status.toUpperCase()}</span></td>
-                                <td style="padding: 0.8rem;">${new Date(sub.submitted_at).toLocaleDateString()}</td>
-                                <td style="padding: 0.8rem;">
-                                    ${sub.status === 'pending' ? `
-                                        <button class="btn" onclick="approveSubmission(${sub.id})" style="background: #28a745; margin-right: 0.5rem; padding: 0.3rem 0.8rem; font-size: 0.8rem;">Approve</button>
-                                        <button class="btn" onclick="rejectSubmission(${sub.id})" style="background: #dc3545; padding: 0.3rem 0.8rem; font-size: 0.8rem;">Reject</button>
-                                    ` : `<span>Reviewed</span>`}
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-        }
-
-        function updatePendingCount(submissions) {
-            const pendingCount = submissions.filter(sub => sub.status === 'pending').length;
-            document.getElementById('pendingSubmissions').textContent = pendingCount;
-        }
-
-        async function approveSubmission(submissionId) {
-            const points = prompt('Enter points to award (default: 5):', '5');
-            if (!points) return;
-
-            const token = localStorage.getItem('adminToken');
-            try {
-                const response = await fetch(`/api/admin/submission/${submissionId}/approve`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ points: parseInt(points) })
-                });
-
-                if (response.ok) {
-                    alert('Submission approved!');
-                    loadSubmissions();
-                    loadAdminData();
-                }
-            } catch (error) {
-                alert('Failed to approve submission');
-            }
-        }
-
-        async function rejectSubmission(submissionId) {
-            if (!confirm('Are you sure you want to reject this submission?')) return;
-
-            const token = localStorage.getItem('adminToken');
-            try {
-                const response = await fetch(`/api/admin/submission/${submissionId}/reject`, {
-                    method: 'PUT',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (response.ok) {
-                    alert('Submission rejected');
-                    loadSubmissions();
-                }
-            } catch (error) {
-                alert('Failed to reject submission');
-            }
-        }
-
-        async function loadRewardClaims() {
-            const token = localStorage.getItem('adminToken');
-            try {
-                const response = await fetch('/api/admin/reward-claims', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (response.ok) {
-                    const claims = await response.json();
-                    displayRewardClaims(claims);
-                    updateRewardStats(claims);
-                }
-            } catch (error) {
-                document.getElementById('rewardClaimsTable').innerHTML = '<p>Failed to load reward claims</p>';
-            }
-        }
-
-        function displayRewardClaims(claims) {
-            const container = document.getElementById('rewardClaimsTable');
-            
-            if (claims.length === 0) {
-                container.innerHTML = '<p>No reward claims yet.</p>';
-                return;
-            }
-
-            container.innerHTML = `
-                <table style="width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 10px; overflow: hidden;">
-                    <thead style="background: var(--option-bg);">
-                        <tr>
-                            <th style="padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color);">ID</th>
-                            <th style="padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color);">User</th>
-                            <th style="padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color);">Reward</th>
-                            <th style="padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color);">Points</th>
-                            <th style="padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color);">Status</th>
-                            <th style="padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color);">Claimed</th>
-                            <th style="padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color);">Shipping Info</th>
-                            <th style="padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color);">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${claims.map(claim => `
-                            <tr style="border-bottom: 1px solid var(--border-color);">
-                                <td style="padding: 0.8rem;">${claim.id}</td>
-                                <td style="padding: 0.8rem; font-weight: bold;">${claim.username}</td>
-                                <td style="padding: 0.8rem;">${claim.reward_name}</td>
-                                <td style="padding: 0.8rem; color: #667eea; font-weight: bold;">${claim.points_required}</td>
-                                <td style="padding: 0.8rem;"><span class="status-${claim.status}">${claim.status.toUpperCase()}</span></td>
-                                <td style="padding: 0.8rem;">${new Date(claim.claimed_at).toLocaleDateString()}</td>
-                                <td style="padding: 0.8rem;">
-                                    ${claim.shipping_info ? `<button class="btn" onclick="showShippingInfo('${claim.shipping_info.replace(/'/g, "\\'")}')">View Info</button>` : 'Digital Reward'}
-                                </td>
-                                <td style="padding: 0.8rem;">
-                                    ${claim.status === 'pending' ? `
-                                        <button class="btn" onclick="approveRewardClaim(${claim.id})" style="background: #28a745; margin-right: 0.5rem; padding: 0.3rem 0.8rem; font-size: 0.8rem;">Approve</button>
-                                        <button class="btn" onclick="rejectRewardClaim(${claim.id})" style="background: #dc3545; padding: 0.3rem 0.8rem; font-size: 0.8rem;">Reject</button>
-                                    ` : claim.status === 'approved' ? `
-                                        <button class="btn" onclick="markAsShipped(${claim.id})" style="background: #17a2b8; padding: 0.3rem 0.8rem; font-size: 0.8rem;">Mark Shipped</button>
-                                    ` : `<span>Completed</span>`}
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-        }
-
-        function updateRewardStats(claims) {
-            const pendingClaims = claims.filter(claim => claim.status === 'pending').length;
-            const currentPending = parseInt(document.getElementById('pendingSubmissions').textContent) || 0;
-            document.getElementById('pendingSubmissions').textContent = currentPending + pendingClaims;
-        }
-
-        function showShippingInfo(shippingInfoStr) {
-            try {
-                const info = JSON.parse(shippingInfoStr);
-                alert(`Shipping Information:\n\nName: ${info.fullName}\nAddress: ${info.address}\nPhone: ${info.phone}`);
-            } catch (e) {
-                alert('Shipping Info: ' + shippingInfoStr);
-            }
-        }
-
-        async function approveRewardClaim(claimId) {
-            if (!confirm('Approve this reward claim?')) return;
-
-            const token = localStorage.getItem('adminToken');
-            try {
-                const response = await fetch(`/api/admin/reward-claim/${claimId}/approve`, {
-                    method: 'PUT',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (response.ok) {
-                    alert('Reward claim approved!');
-                    loadRewardClaims();
-                }
-            } catch (error) {
-                alert('Failed to approve claim');
-            }
-        }
-
-        async function markAsShipped(claimId) {
-            if (!confirm('Mark this reward as shipped?')) return;
-
-            const token = localStorage.getItem('adminToken');
-            try {
-                const response = await fetch(`/api/admin/reward-claim/${claimId}/ship`, {
-                    method: 'PUT',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (response.ok) {
-                    alert('Reward marked as shipped!');
-                    loadRewardClaims();
-                }
-            } catch (error) {
-                alert('Failed to mark as shipped');
-            }
-        }
-
-        async function rejectRewardClaim(claimId) {
-            if (!confirm('Reject this reward claim? Points will be refunded to the user.')) return;
-
-            const token = localStorage.getItem('adminToken');
-            try {
-                const response = await fetch(`/api/admin/reward-claim/${claimId}/reject`, {
-                    method: 'PUT',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (response.ok) {
-                    alert('Reward claim rejected and points refunded!');
-                    loadRewardClaims();
-                    loadAdminData();
-                }
-            } catch (error) {
-                alert('Failed to reject claim');
-            }
-        }
-
-        function showTab(tab) {
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('[id$="Tab"]').forEach(t => t.style.display = 'none');
-            
-            event.target.classList.add('active');
-            document.getElementById(tab + 'Tab').style.display = 'block';
-            
-            if (tab === 'rewards') {
-                loadRewardClaims();
-            }
-        }
-
-        function togglePassword(inputId) {
-            const input = document.getElementById(inputId);
-            const icon = input.nextElementSibling;
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.textContent = '🙈';
+        // Wait for Plotly to load before initializing
+        function initializeCharts() {
+            if (typeof Plotly !== 'undefined') {
+                // Load visualization.js content inline to ensure it works
+                const script = document.createElement('script');
+                script.src = 'js/visualization.js';
+                script.onload = function() {
+                    console.log('Visualization script loaded');
+                };
+                script.onerror = function() {
+                    console.error('Failed to load visualization script');
+                    // Fallback: initialize charts directly
+                    initializeFallbackCharts();
+                };
+                document.head.appendChild(script);
             } else {
-                input.type = 'password';
-                icon.textContent = '👁️';
+                console.error('Plotly not loaded');
+                setTimeout(initializeCharts, 100);
             }
         }
-
+        
+        function initializeFallbackCharts() {
+            // Initialize all charts directly
+            showGlobalData();
+            showPieChart();
+            showWorldMap();
+        }
+        
+        // Chart functions
+        function showGlobalData() {
+            const trace = {
+                x: ['Energy Production', 'Agriculture', 'Industry', 'Transportation', 'Buildings', 'Other Energy'],
+                y: [25, 24, 21, 14, 6, 10],
+                z: [20, 19.2, 16.8, 11.2, 4.8, 8],
+                type: 'scatter3d',
+                mode: 'markers',
+                marker: {
+                    size: [50, 48, 42, 28, 12, 20],
+                    color: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'],
+                    opacity: 0.8
+                }
+            };
+            
+            const layout = {
+                title: 'Global Carbon Emissions by Sector (3D View)',
+                scene: {
+                    xaxis: { title: 'Emission Sectors' },
+                    yaxis: { title: 'Global Share (%)' },
+                    zaxis: { title: 'Absolute Emissions (Gt CO₂)' }
+                }
+            };
+            
+            if (typeof Plotly !== 'undefined') {
+                Plotly.purge('chart1');
+                Plotly.newPlot('chart1', [trace], layout, {responsive: true});
+            }
+        }
+        
+        function showPersonalData() {
+            const trace = {
+                x: ['Transportation', 'Home Energy', 'Food', 'Goods & Services', 'Waste'],
+                y: [2.3, 2.1, 1.8, 1.2, 0.6],
+                z: [2.8, 2.5, 2.2, 1.4, 0.7],
+                type: 'scatter3d',
+                mode: 'markers',
+                marker: {
+                    size: [18, 17, 14, 10, 5],
+                    color: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7'],
+                    opacity: 0.8
+                }
+            };
+            
+            const layout = {
+                title: 'Personal Carbon Footprint by Category',
+                scene: {
+                    xaxis: { title: 'Lifestyle Categories' },
+                    yaxis: { title: 'Personal Emissions (t CO₂/year)' },
+                    zaxis: { title: 'Reduction Potential (t CO₂/year)' }
+                }
+            };
+            
+            if (typeof Plotly !== 'undefined') {
+                Plotly.purge('chart1');
+                Plotly.newPlot('chart1', [trace], layout, {responsive: true});
+            }
+        }
+        
+        function showComparison() {
+            const trace = {
+                x: ['China', 'United States', 'India', 'Russia', 'Japan', 'Germany'],
+                y: [10065, 5416, 2654, 1711, 1162, 759],
+                type: 'bar',
+                marker: {
+                    color: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD']
+                }
+            };
+            
+            const layout = {
+                title: 'Top Countries by CO₂ Emissions',
+                xaxis: { title: 'Countries' },
+                yaxis: { title: 'Emissions (Mt CO₂/year)' }
+            };
+            
+            if (typeof Plotly !== 'undefined') {
+                Plotly.newPlot('chart1', [trace], layout, {responsive: true});
+            }
+        }
+        
+        function showTrends() {
+            const trace = {
+                x: [2000, 2005, 2010, 2015, 2020, 2023],
+                y: [25000, 28000, 32000, 35000, 34000, 36700],
+                type: 'scatter',
+                mode: 'lines+markers',
+                line: { color: '#FF6B6B', width: 3 },
+                marker: { size: 8, color: '#4ECDC4' }
+            };
+            
+            const layout = {
+                title: 'Global CO₂ Emissions Trend (2000-2023)',
+                xaxis: { title: 'Year' },
+                yaxis: { title: 'Emissions (Mt CO₂)' }
+            };
+            
+            if (typeof Plotly !== 'undefined') {
+                Plotly.newPlot('chart1', [trace], layout, {responsive: true});
+            }
+        }
+        
+        function showPieChart() {
+            const trace = {
+                labels: ['Energy Production', 'Agriculture', 'Industry', 'Transportation', 'Buildings', 'Other Energy'],
+                values: [25, 24, 21, 14, 6, 10],
+                type: 'pie',
+                marker: {
+                    colors: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD']
+                }
+            };
+            
+            const layout = {
+                title: 'Global Emissions Distribution'
+            };
+            
+            if (typeof Plotly !== 'undefined') {
+                Plotly.newPlot('chart2', [trace], layout, {responsive: true});
+            }
+        }
+        
+        function showBarChart() {
+            const trace = {
+                x: ['Energy Production', 'Agriculture', 'Industry', 'Transportation', 'Buildings', 'Other Energy'],
+                y: [25, 24, 21, 14, 6, 10],
+                type: 'bar',
+                marker: {
+                    color: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD']
+                }
+            };
+            
+            const layout = {
+                title: 'Emissions by Sector (Bar Chart)',
+                xaxis: { title: 'Sectors' },
+                yaxis: { title: 'Percentage (%)' }
+            };
+            
+            if (typeof Plotly !== 'undefined') {
+                Plotly.newPlot('chart2', [trace], layout, {responsive: true});
+            }
+        }
+        
+        function showSunburst() {
+            // Fallback to pie chart if sunburst not supported
+            showPieChart();
+        }
+        
+        function showWorldMap() {
+            const trace = {
+                type: 'choropleth',
+                locationmode: 'country names',
+                locations: ['China', 'United States', 'India', 'Russia', 'Japan', 'Germany'],
+                z: [10065, 5416, 2654, 1711, 1162, 759],
+                colorscale: 'Reds'
+            };
+            
+            const layout = {
+                title: 'Global CO₂ Emissions by Country',
+                geo: {
+                    showframe: false,
+                    showcoastlines: true
+                }
+            };
+            
+            if (typeof Plotly !== 'undefined') {
+                Plotly.newPlot('chart3', [trace], layout, {responsive: true});
+            }
+        }
+        
+        // Initialize when DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
-
-
-            const adminToken = localStorage.getItem('adminToken');
-            if (adminToken) {
-                document.getElementById('loginSection').style.display = 'none';
-                document.getElementById('adminPanel').style.display = 'block';
-                loadAdminData();
-            }
+            // Wait a bit for Plotly to load
+            setTimeout(function() {
+                if (typeof Plotly !== 'undefined') {
+                    initializeFallbackCharts();
+                } else {
+                    console.error('Plotly.js failed to load');
+                }
+            }, 1000);
         });
-    </script>
+        
 
-    <style>
-        .message {
-            padding: 1rem;
-            border-radius: 5px;
-            margin-top: 1rem;
-            text-align: center;
-        }
-        .message.error {
-            background: #fee;
-            color: #c33;
-            border: 1px solid #fcc;
-        }
-        .big-number {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #667eea;
-        }
-        table {
-            color: var(--text-color);
-        }
-        .admin-tabs {
-            display: flex;
-            margin-bottom: 2rem;
-        }
-        .tab-btn {
-            flex: 1;
-            padding: 1rem;
-            border: none;
-            background: var(--option-bg);
-            color: var(--text-color);
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-        }
-        .tab-btn.active {
-            border-bottom-color: #667eea;
-            background: var(--card-bg);
-        }
-        .status-pending { color: #ffc107; font-weight: bold; }
-        .status-approved { color: #28a745; font-weight: bold; }
-        .status-rejected { color: #dc3545; font-weight: bold; }
-    </style>
+    </script>
 </body>
 </html>
