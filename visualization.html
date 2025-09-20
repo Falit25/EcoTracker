@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Emission Visualization - EcoTrack</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
     <header>
-        <button class="theme-toggle" onclick="toggleTheme()" style="position: absolute; top: 1rem; left: 1rem;">📈 Dark Mode</button>
+
         <h1>📈 EcoTrack 3D Analytics</h1>
         <p>Interactive 3D charts showing emissions by sector</p>
         <a href="dashboard.html" class="btn" style="position: absolute; top: 3.5rem; left: 1rem;">← Back to Dashboard</a>
@@ -280,29 +280,7 @@
             }, 1000);
         });
         
-        function toggleTheme() {
-            const body = document.body;
-            const button = document.querySelector('.theme-toggle');
-            
-            if (body.getAttribute('data-theme') === 'dark') {
-                body.removeAttribute('data-theme');
-                button.textContent = '🌙 Dark Mode';
-                localStorage.setItem('theme', 'light');
-            } else {
-                body.setAttribute('data-theme', 'dark');
-                button.textContent = '☀️ Light Mode';
-                localStorage.setItem('theme', 'dark');
-            }
-        }
 
-        // Theme initialization
-        const savedTheme = localStorage.getItem('theme');
-        const button = document.querySelector('.theme-toggle');
-        
-        if (savedTheme === 'dark') {
-            document.body.setAttribute('data-theme', 'dark');
-            if (button) button.textContent = '☀️ Light Mode';
-        }
     </script>
 </body>
 </html>
