@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - EcoTrack</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <header>
-        <button class="theme-toggle" onclick="toggleTheme()" style="position: absolute; top: 1rem; left: 1rem;">🌙 Dark Mode</button>
+
         <h1>🔐 EcoTrack Admin Panel</h1>
         <p>Manage users and view system statistics</p>
         <button class="btn" onclick="logout()" style="position: absolute; top: 3.5rem; left: 1rem;">Logout</button>
@@ -282,20 +282,7 @@
             setTimeout(() => message.style.display = 'none', 3000);
         }
 
-        function toggleTheme() {
-            const body = document.body;
-            const button = document.querySelector('.theme-toggle');
-            
-            if (body.getAttribute('data-theme') === 'dark') {
-                body.removeAttribute('data-theme');
-                button.textContent = '🌙 Dark Mode';
-                localStorage.setItem('theme', 'light');
-            } else {
-                body.setAttribute('data-theme', 'dark');
-                button.textContent = '☀️ Light Mode';
-                localStorage.setItem('theme', 'dark');
-            }
-        }
+
 
         async function suspendUser(userId, currentStatus) {
             const action = currentStatus ? 'activate' : 'suspend';
@@ -594,13 +581,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            const savedTheme = localStorage.getItem('theme');
-            const button = document.querySelector('.theme-toggle');
-            
-            if (savedTheme === 'dark') {
-                document.body.setAttribute('data-theme', 'dark');
-                button.textContent = '☀️ Light Mode';
-            }
+
 
             const adminToken = localStorage.getItem('adminToken');
             if (adminToken) {
