@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Emission Visualization - EcoTrack</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="style.css">
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
-<body>
+<body data-theme="dark">
     <header>
 
         <h1>📈 EcoTrack 3D Analytics</h1>
@@ -127,6 +127,7 @@
             };
             
             if (typeof Plotly !== 'undefined') {
+                Plotly.purge('chart1');
                 Plotly.newPlot('chart1', [trace], layout, {responsive: true});
             }
         }
@@ -155,6 +156,7 @@
             };
             
             if (typeof Plotly !== 'undefined') {
+                Plotly.purge('chart1');
                 Plotly.newPlot('chart1', [trace], layout, {responsive: true});
             }
         }
