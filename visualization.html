@@ -12,7 +12,7 @@
         <button class="theme-toggle" onclick="toggleTheme()" style="position: absolute; top: 1rem; left: 1rem;">📈 Dark Mode</button>
         <h1>📈 EcoTrack 3D Analytics</h1>
         <p>Interactive 3D charts showing emissions by sector</p>
-        <a href="index.html" class="btn" style="position: absolute; top: 3.5rem; left: 1rem;">← Back to Home</a>
+        <a href="dashboard.html" class="btn" style="position: absolute; top: 3.5rem; left: 1rem;">← Back to Dashboard</a>
     </header>
 
     <main>
@@ -73,8 +73,213 @@
         </div>
     </main>
 
-    <script src="js/visualization.js"></script>
     <script>
+        // Wait for Plotly to load before initializing
+        function initializeCharts() {
+            if (typeof Plotly !== 'undefined') {
+                // Load visualization.js content inline to ensure it works
+                const script = document.createElement('script');
+                script.src = 'js/visualization.js';
+                script.onload = function() {
+                    console.log('Visualization script loaded');
+                };
+                script.onerror = function() {
+                    console.error('Failed to load visualization script');
+                    // Fallback: initialize charts directly
+                    initializeFallbackCharts();
+                };
+                document.head.appendChild(script);
+            } else {
+                console.error('Plotly not loaded');
+                setTimeout(initializeCharts, 100);
+            }
+        }
+        
+        function initializeFallbackCharts() {
+            // Initialize all charts directly
+            showGlobalData();
+            showPieChart();
+            showWorldMap();
+        }
+        
+        // Chart functions
+        function showGlobalData() {
+            const trace = {
+                x: ['Energy Production', 'Agriculture', 'Industry', 'Transportation', 'Buildings', 'Other Energy'],
+                y: [25, 24, 21, 14, 6, 10],
+                z: [20, 19.2, 16.8, 11.2, 4.8, 8],
+                type: 'scatter3d',
+                mode: 'markers',
+                marker: {
+                    size: [50, 48, 42, 28, 12, 20],
+                    color: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'],
+                    opacity: 0.8
+                }
+            };
+            
+            const layout = {
+                title: 'Global Carbon Emissions by Sector (3D View)',
+                scene: {
+                    xaxis: { title: 'Sectors' },
+                    yaxis: { title: 'Percentage (%)' },
+                    zaxis: { title: 'Impact Level' }
+                }
+            };
+            
+            if (typeof Plotly !== 'undefined') {
+                Plotly.newPlot('chart1', [trace], layout, {responsive: true});
+            }
+        }
+        
+        function showPersonalData() {
+            const trace = {
+                x: ['Transportation', 'Home Energy', 'Food', 'Goods & Services', 'Waste'],
+                y: [2.3, 2.1, 1.8, 1.2, 0.6],
+                z: [2.8, 2.5, 2.2, 1.4, 0.7],
+                type: 'scatter3d',
+                mode: 'markers',
+                marker: {
+                    size: [18, 17, 14, 10, 5],
+                    color: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7'],
+                    opacity: 0.8
+                }
+            };
+            
+            const layout = {
+                title: 'Personal Carbon Footprint by Category',
+                scene: {
+                    xaxis: { title: 'Categories' },
+                    yaxis: { title: 'Tons CO₂/year' },
+                    zaxis: { title: 'Impact Level' }
+                }
+            };
+            
+            if (typeof Plotly !== 'undefined') {
+                Plotly.newPlot('chart1', [trace], layout, {responsive: true});
+            }
+        }
+        
+        function showComparison() {
+            const trace = {
+                x: ['China', 'United States', 'India', 'Russia', 'Japan', 'Germany'],
+                y: [10065, 5416, 2654, 1711, 1162, 759],
+                type: 'bar',
+                marker: {
+                    color: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD']
+                }
+            };
+            
+            const layout = {
+                title: 'Top Countries by CO₂ Emissions',
+                xaxis: { title: 'Countries' },
+                yaxis: { title: 'Emissions (Mt CO₂/year)' }
+            };
+            
+            if (typeof Plotly !== 'undefined') {
+                Plotly.newPlot('chart1', [trace], layout, {responsive: true});
+            }
+        }
+        
+        function showTrends() {
+            const trace = {
+                x: [2000, 2005, 2010, 2015, 2020, 2023],
+                y: [25000, 28000, 32000, 35000, 34000, 36700],
+                type: 'scatter',
+                mode: 'lines+markers',
+                line: { color: '#FF6B6B', width: 3 },
+                marker: { size: 8, color: '#4ECDC4' }
+            };
+            
+            const layout = {
+                title: 'Global CO₂ Emissions Trend (2000-2023)',
+                xaxis: { title: 'Year' },
+                yaxis: { title: 'Emissions (Mt CO₂)' }
+            };
+            
+            if (typeof Plotly !== 'undefined') {
+                Plotly.newPlot('chart1', [trace], layout, {responsive: true});
+            }
+        }
+        
+        function showPieChart() {
+            const trace = {
+                labels: ['Energy Production', 'Agriculture', 'Industry', 'Transportation', 'Buildings', 'Other Energy'],
+                values: [25, 24, 21, 14, 6, 10],
+                type: 'pie',
+                marker: {
+                    colors: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD']
+                }
+            };
+            
+            const layout = {
+                title: 'Global Emissions Distribution'
+            };
+            
+            if (typeof Plotly !== 'undefined') {
+                Plotly.newPlot('chart2', [trace], layout, {responsive: true});
+            }
+        }
+        
+        function showBarChart() {
+            const trace = {
+                x: ['Energy Production', 'Agriculture', 'Industry', 'Transportation', 'Buildings', 'Other Energy'],
+                y: [25, 24, 21, 14, 6, 10],
+                type: 'bar',
+                marker: {
+                    color: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD']
+                }
+            };
+            
+            const layout = {
+                title: 'Emissions by Sector (Bar Chart)',
+                xaxis: { title: 'Sectors' },
+                yaxis: { title: 'Percentage (%)' }
+            };
+            
+            if (typeof Plotly !== 'undefined') {
+                Plotly.newPlot('chart2', [trace], layout, {responsive: true});
+            }
+        }
+        
+        function showSunburst() {
+            // Fallback to pie chart if sunburst not supported
+            showPieChart();
+        }
+        
+        function showWorldMap() {
+            const trace = {
+                type: 'choropleth',
+                locationmode: 'country names',
+                locations: ['China', 'United States', 'India', 'Russia', 'Japan', 'Germany'],
+                z: [10065, 5416, 2654, 1711, 1162, 759],
+                colorscale: 'Reds'
+            };
+            
+            const layout = {
+                title: 'Global CO₂ Emissions by Country',
+                geo: {
+                    showframe: false,
+                    showcoastlines: true
+                }
+            };
+            
+            if (typeof Plotly !== 'undefined') {
+                Plotly.newPlot('chart3', [trace], layout, {responsive: true});
+            }
+        }
+        
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Wait a bit for Plotly to load
+            setTimeout(function() {
+                if (typeof Plotly !== 'undefined') {
+                    initializeFallbackCharts();
+                } else {
+                    console.error('Plotly.js failed to load');
+                }
+            }, 1000);
+        });
+        
         function toggleTheme() {
             const body = document.body;
             const button = document.querySelector('.theme-toggle');
@@ -90,15 +295,14 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const savedTheme = localStorage.getItem('theme');
-            const button = document.querySelector('.theme-toggle');
-            
-            if (savedTheme === 'dark') {
-                document.body.setAttribute('data-theme', 'dark');
-                button.textContent = '☀️ Light Mode';
-            }
-        });
+        // Theme initialization
+        const savedTheme = localStorage.getItem('theme');
+        const button = document.querySelector('.theme-toggle');
+        
+        if (savedTheme === 'dark') {
+            document.body.setAttribute('data-theme', 'dark');
+            if (button) button.textContent = '☀️ Light Mode';
+        }
     </script>
 </body>
 </html>
