@@ -6,7 +6,6 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
-const csrf = require('csurf');
 require('dotenv').config();
 
 const app = express();
