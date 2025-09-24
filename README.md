@@ -29,8 +29,7 @@ https://ecotracker-b7x4.onrender.com
 ## 🛠️ Tech Stack
 
 **Backend:** Node.js, Express, PostgreSQL, JWT, bcrypt  
-**Frontend:** HTML5, CSS3, Vanilla JS, Plotly.js  
-**Security:** Rate limiting, SSL validation, safe DOM manipulation
+**Frontend:** HTML5, CSS3, Vanilla JS, Plotly.js, Deployed by Neon
 
 ## 📁 Structure
 
@@ -54,7 +53,7 @@ SSH/
 ## 🎯 Usage
 
 1. **Register/Login** → **Take Calculator** (+10 pts) → **Play Games** (+5 pts each)
-2. **Admin:** `/admin.html` (password: admin123) → Manage users & rewards
+2. **Admin:** `/admin.html` → Manage users & rewards
 
 ## 🔒 Security & Accuracy
 
