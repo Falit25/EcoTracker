@@ -52,7 +52,77 @@
         </div>
     </main>
 
-    <script src="js/impact.js"></script>
+    <script src="js/impact-simple.js"></script>
+    <style>
+        .scenario-description {
+            margin: 1rem 0;
+            padding: 1rem;
+            border-radius: 10px;
+            border-left: 4px solid;
+        }
+        .scenario-description.sustainable {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            border-left-color: #28a745;
+        }
+        .scenario-description.moderate {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            border-left-color: #ffc107;
+        }
+        .scenario-description.concerning {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+            border-left-color: #fd7e14;
+        }
+        .scenario-description.critical {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            border-left-color: #dc3545;
+        }
+        .scenario-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .stat {
+            background: rgba(255,255,255,0.7);
+            padding: 0.8rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-label {
+            display: block;
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.3rem;
+        }
+        .stat-value {
+            display: block;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        .stat-value.sustainable { color: #28a745; }
+        .stat-value.concerning { color: #fd7e14; }
+        .stat-value.critical { color: #dc3545; }
+        .action-list {
+            list-style: none;
+            padding: 0;
+        }
+        .action-list li {
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+            background: var(--option-bg);
+            border-radius: 5px;
+            border-left: 3px solid #667eea;
+        }
+        .impact-stat {
+            text-align: center;
+            margin: 1rem 0;
+        }
+        .big-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+    </style>
     <script>
         function toggleTheme() {
             const body = document.body;
