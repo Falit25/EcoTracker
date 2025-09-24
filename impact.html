@@ -21,7 +21,7 @@
             <div class="input-group">
                 <label for="carbonFootprint">Your Carbon Footprint (tons CO₂/year):</label>
                 <input type="number" id="carbonFootprint" step="0.1" min="0" max="100" placeholder="Enter your carbon footprint">
-                <small>Don't know? <a href="quiz.html">Take our quiz</a> to find out!</small>
+                <small>Don't know? <a href="calculator.html">Use our calculator</a> or <a href="quiz.html">take our quiz</a> to find out!</small>
             </div>
             
             <button onclick="calculateGlobalImpact()" class="btn">Calculate Global Impact</button>
@@ -78,10 +78,10 @@
                 button.textContent = '☀️ Light Mode';
             }
             
-            // Check if user is logged in
-            const token = localStorage.getItem('token');
-            if (!token) {
-                window.location.href = 'login.html';
+            // Check if carbon footprint is available from quiz
+            const storedFootprint = localStorage.getItem('carbonFootprint');
+            if (storedFootprint) {
+                document.getElementById('carbonFootprint').value = storedFootprint;
             }
         });
     </script>
