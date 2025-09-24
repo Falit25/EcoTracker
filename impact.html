@@ -52,7 +52,104 @@
         </div>
     </main>
 
-    <script src="js/impact-simple.js"></script>
+    <script>
+        function calculateGlobalImpact() {
+            const input = document.getElementById('carbonFootprint');
+            const footprint = parseFloat(input.value);
+            if (!footprint || footprint <= 0) {
+                alert('Please enter a valid carbon footprint value.');
+                return;
+            }
+            
+            const globalEmissions = footprint * 8000000000;
+            const earthsNeeded = globalEmissions / 11000000000;
+            
+            document.getElementById('globalResults').innerHTML = `
+                <div class="impact-stat">
+                    <h4>Total Global Emissions:</h4>
+                    <p class="big-number">${(globalEmissions / 1000000000).toFixed(1)} billion tons CO₂/year</p>
+                </div>
+            `;
+            
+            let comparisonClass = footprint < 4.6 ? 'low-impact' : 'high-impact';
+            let comparisonMessage = footprint < 4.6 ? 
+                `🎉 Great! Your footprint is ${(4.6 - footprint).toFixed(1)} tons below average.` :
+                `⚠️ Your footprint is ${(footprint - 4.6).toFixed(1)} tons above average.`;
+            
+            document.getElementById('comparison').innerHTML = `
+                <div class="${comparisonClass}">
+                    <h4>Comparison to Global Average (4.6 tons):</h4>
+                    <p>${comparisonMessage}</p>
+                </div>
+            `;
+            
+            document.getElementById('earthsNeeded').innerHTML = `
+                <div class="${earthsNeeded > 1 ? 'high-impact' : 'low-impact'}">
+                    <h4>Earths Needed:</h4>
+                    <p class="big-number">${earthsNeeded.toFixed(1)} 🌍</p>
+                </div>
+            `;
+            
+            let description = footprint <= 2.3 ? 
+                '🌟 Sustainable Paradise: Your lifestyle creates a green world.' :
+                footprint <= 5 ? 
+                '⚖️ Balanced World: Mixed environmental outcomes.' :
+                '⚠️ Stressed Planet: Significant environmental challenges.';
+            
+            document.getElementById('scenarioDescription').innerHTML = `
+                <div class="scenario-description">
+                    <p>${description}</p>
+                </div>
+            `;
+            
+            let actions = footprint > 10 ? [
+                "🏠 Consider renewable energy",
+                "✈️ Reduce air travel",
+                "🚗 Switch to electric vehicles"
+            ] : [
+                "🚲 Use public transport more",
+                "💡 Upgrade to efficient appliances",
+                "♻️ Increase recycling"
+            ];
+            
+            document.getElementById('actionItems').innerHTML = `
+                <ul class="action-list">
+                    ${actions.map(action => `<li>${action}</li>`).join('')}
+                </ul>
+            `;
+            
+            const canvas = document.getElementById('impactChart');
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                const data = [
+                    { label: 'Your Footprint', value: footprint, color: '#667eea' },
+                    { label: 'Global Average', value: 4.6, color: '#764ba2' },
+                    { label: 'Target', value: 2.3, color: '#28a745' }
+                ];
+                
+                const maxValue = Math.max(...data.map(d => d.value)) * 1.2;
+                
+                data.forEach((item, index) => {
+                    const x = 50 + index * 120;
+                    const barHeight = (item.value / maxValue) * 150;
+                    const y = 180 - barHeight;
+                    
+                    ctx.fillStyle = item.color;
+                    ctx.fillRect(x, y, 80, barHeight);
+                    
+                    ctx.fillStyle = '#000';
+                    ctx.font = '14px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(item.value.toFixed(1), x + 40, y - 5);
+                    ctx.fillText(item.label, x + 40, 195);
+                });
+            }
+            
+            document.getElementById('results').style.display = 'block';
+        }
+    </script>
     <style>
         .scenario-description {
             margin: 1rem 0;
