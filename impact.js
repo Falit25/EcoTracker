@@ -105,18 +105,27 @@ const EARTH_CAPACITY = 11000000000; // Earth's capacity in tons CO2/year
 const AVERAGE_FOOTPRINT = 4.6; // Global average tons CO2/person/year
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Check if carbon footprint is available from quiz
+    // Check if carbon footprint is available from quiz or calculator
     const storedFootprint = localStorage.getItem('carbonFootprint');
     if (storedFootprint) {
-        document.getElementById('carbonFootprint').value = storedFootprint;
+        const input = document.getElementById('carbonFootprint');
+        if (input) {
+            input.value = storedFootprint;
+        }
     }
 });
 
 function calculateGlobalImpact() {
-    const footprint = parseFloat(document.getElementById('carbonFootprint').value);
+    const input = document.getElementById('carbonFootprint');
+    if (!input) {
+        alert('Carbon footprint input not found.');
+        return;
+    }
     
-    if (!footprint || footprint <= 0) {
-        alert('Please enter a valid carbon footprint value.');
+    const footprint = parseFloat(input.value);
+    
+    if (!footprint || footprint <= 0 || isNaN(footprint)) {
+        alert('Please enter a valid carbon footprint value (greater than 0).');
         return;
     }
     
@@ -224,6 +233,10 @@ function generateActionItems(footprint, earthsNeeded) {
 
 function createImpactChart(userFootprint) {
     const canvas = document.getElementById('impactChart');
+    if (!canvas) {
+        console.error('Impact chart canvas not found');
+        return;
+    }
     const ctx = canvas.getContext('2d');
     
     // Clear canvas
@@ -320,11 +333,16 @@ function generateFutureScenario(footprint, earthsNeeded) {
 }
 
 function generateAIImage(prompt, scenario, container) {
+    if (!container) {
+        console.error('Container not found for AI image generation');
+        return;
+    }
+    
     // Create a canvas to generate the AI-style image
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    canvas.width = 500;
-    canvas.height = 350;
+    canvas.width = 400;
+    canvas.height = 300;
     
     // Create gradient background based on scenario
     let gradient;
