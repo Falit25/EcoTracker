@@ -62,8 +62,6 @@ SSH/
 - ✅ SSL certificate validation
 - ✅ Input validation middleware
 - ✅ Rate limiting (5 attempts/5min)
-- ✅ Path traversal protection
-- ✅ Timing-safe password comparison
 
 **Carbon Footprint Accuracy:**
 - 🟢 **Low Impact (4-7 tons)**: Eco-conscious lifestyle
